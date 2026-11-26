@@ -1,0 +1,38 @@
+# Root .gitignore
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.production
+
+# Embedded PostgreSQL data directory
+server/.pgdata/
+
+# File uploads (store externally in production)
+server/uploads/images/*
+server/uploads/documents/*
+server/uploads/csv/*
+!server/uploads/images/.gitkeep
+!server/uploads/documents/.gitkeep
+!server/uploads/csv/.gitkeep
+
+# Build output
+client/dist/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Prisma generated
+server/node_modules/.prisma/

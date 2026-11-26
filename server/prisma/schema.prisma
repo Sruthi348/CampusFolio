@@ -1,0 +1,421 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  STUDENT
+  STAFF
+  ADMIN
+}
+
+enum StudentStatus {
+  PENDING
+  ACTIVE
+  GRADUATED
+  ALUMNI
+  SUSPENDED
+  ARCHIVED
+}
+
+enum SkillCategory {
+  TECHNICAL
+  SOFT
+  INTEREST
+}
+
+enum EducationLevel {
+  SCHOOL
+  DIPLOMA
+  UG
+  PG
+  OTHER
+}
+
+enum ProjectProgress {
+  COMPLETED
+  IN_PROGRESS
+  PROTOTYPE
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  RESUBMISSION_REQUIRED
+}
+
+enum DocumentCategory {
+  CERTIFICATE
+  ACHIEVEMENT
+  INTERNSHIP_EXPERIENCE
+  ACADEMIC_SUPPORTING
+  OTHER
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  passwordHash        String
+  role                Role                 @default(STUDENT)
+  isInitialPassword   Boolean              @default(true)
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  studentProfile      StudentProfile?
+  staffProfile        StaffProfile?
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Department {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  code        String           @unique
+  description String?
+  isArchived  Boolean          @default(false)
+  batches     Batch[]
+  students    StudentProfile[]
+  staffProfiles StaffProfile[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model Batch {
+  id             String           @id @default(uuid())
+  name           String
+  graduationYear Int
+  departmentId   String
+  department     Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  isArchived     Boolean          @default(false)
+  students       StudentProfile[]
+  staffProfiles  StaffProfile[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@unique([name, departmentId])
+}
+
+model StudentProfile {
+  id                 String            @id @default(uuid())
+  userId             String            @unique
+  user               User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName           String
+  slug               String            @unique
+  rollNumber         String            @unique
+  departmentId       String
+  department         Department        @relation(fields: [departmentId], references: [id])
+  batchId            String
+  batch              Batch             @relation(fields: [batchId], references: [id])
+  photoUrl           String?
+  bio                String?           @db.VarChar(150)
+  dateOfBirth        DateTime?
+  status             StudentStatus     @default(ACTIVE)
+  isApproved         Boolean           @default(true)
+  isPublished        Boolean           @default(true)
+  visibilitySettings Json?
+  profileViews       Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  links              StudentLink[]
+  skills             StudentSkill[]
+  education          Education[]
+  projects           Project[]
+  certifications     Certification[]
+  experience         Experience[]
+  achievements       Achievement[]
+  extracurriculars   Extracurricular[]
+  assignedStaff      StaffStudentAssignment[]
+  documentSubmissions DocumentSubmission[]
+  verificationRecords VerificationRecord[]
+
+  @@index([slug])
+  @@index([departmentId])
+  @@index([batchId])
+  @@index([status])
+}
+
+model StudentLink {
+  id        String         @id @default(uuid())
+  studentId String
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  platform  String
+  url       String
+  label     String?
+  createdAt DateTime       @default(now())
+
+  @@index([studentId])
+}
+
+model Skill {
+  id                  String               @id @default(uuid())
+  name                String               @unique
+  category            SkillCategory        @default(TECHNICAL)
+  studentSkills       StudentSkill[]
+  projectTechnologies ProjectTechnology[]
+  createdAt           DateTime             @default(now())
+
+  @@index([name])
+}
+
+model StudentSkill {
+  id          String         @id @default(uuid())
+  studentId   String
+  student     StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  skillId     String
+  skill       Skill          @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  proficiency String?
+
+  @@unique([studentId, skillId])
+  @@index([studentId])
+  @@index([skillId])
+}
+
+model Education {
+  id           String         @id @default(uuid())
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  level        EducationLevel @default(UG)
+  program      String
+  institution  String
+  fieldOfStudy String
+  startYear    Int
+  endYear      Int?
+  isCurrent    Boolean        @default(false)
+  grade        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([studentId])
+}
+
+model Project {
+  id             String              @id @default(uuid())
+  studentId      String
+  student        StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title          String
+  summary        String?
+  description    String              @db.Text
+  category       String?
+  role           String?
+  startDate      DateTime?
+  endDate        DateTime?
+  isOngoing      Boolean             @default(false)
+  githubUrl      String?
+  demoLink       String?
+  screenshotUrl  String?
+  isFeatured     Boolean             @default(false)
+  progressStatus ProjectProgress     @default(COMPLETED)
+  technologies   ProjectTechnology[]
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([studentId])
+  @@index([isFeatured])
+}
+
+model ProjectTechnology {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  skillId   String
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, skillId])
+  @@index([projectId])
+  @@index([skillId])
+}
+
+model Certification {
+  id                 String             @id @default(uuid())
+  studentId          String
+  student            StudentProfile     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name               String
+  issuer             String
+  issueDate          DateTime
+  expiryDate         DateTime?
+  credentialUrl      String?
+  certificateFileUrl String?
+  verificationStatus VerificationStatus @default(PENDING)
+  verificationNotes  String?
+  verifiedAt         DateTime?
+  verifiedBy         String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([studentId])
+  @@index([verificationStatus])
+}
+
+model Experience {
+  id           String         @id @default(uuid())
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  organization String
+  role         String
+  location     String?
+  startDate    DateTime
+  endDate      DateTime?
+  isCurrent    Boolean        @default(false)
+  description  String         @db.Text
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([studentId])
+}
+
+model Achievement {
+  id                 String             @id @default(uuid())
+  studentId          String
+  student            StudentProfile     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title              String
+  description        String             @db.Text
+  date               DateTime
+  proofUrl           String?
+  proofFileUrl       String?
+  verificationStatus VerificationStatus @default(PENDING)
+  verifiedAt         DateTime?
+  verifiedBy         String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([studentId])
+  @@index([verificationStatus])
+}
+
+model Extracurricular {
+  id           String         @id @default(uuid())
+  studentId    String
+  student      StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  activityName String
+  role         String
+  organization String?
+  duration     String
+  description  String         @db.Text
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([studentId])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  adminId     String
+  adminEmail  String
+  action      String
+  targetType  String
+  targetId    String
+  details     String?  @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model StaffProfile {
+  id                  String                   @id @default(uuid())
+  userId              String                   @unique
+  user                User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  staffId             String                   @unique
+  fullName            String
+  phone               String?
+  designation         String                   @default("Class In-charge / Tutor")
+  departmentId        String?
+  department          Department?              @relation(fields: [departmentId], references: [id])
+  batchId             String?
+  batch               Batch?                   @relation(fields: [batchId], references: [id])
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+
+  assignedStudents    StaffStudentAssignment[]
+  verificationRecords VerificationRecord[]
+
+  @@index([departmentId])
+  @@index([batchId])
+}
+
+model StaffStudentAssignment {
+  id             String         @id @default(uuid())
+  staffProfileId String
+  staffProfile   StaffProfile   @relation(fields: [staffProfileId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignedAt     DateTime       @default(now())
+
+  @@unique([staffProfileId, studentId])
+  @@index([staffProfileId])
+  @@index([studentId])
+}
+
+model DocumentSubmission {
+  id                  String               @id @default(uuid())
+  studentId           String
+  student             StudentProfile       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  title               String
+  category            DocumentCategory     @default(CERTIFICATE)
+  fileUrl             String
+  fileName            String?
+  fileSize            Int?
+  description         String?              @db.Text
+  credentialUrl       String?
+  issueDate           DateTime?
+  status              VerificationStatus   @default(PENDING)
+  version             Int                  @default(1)
+
+  certificationId     String?
+  achievementId       String?
+  experienceId        String?
+
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  verificationRecords VerificationRecord[]
+
+  @@index([studentId])
+  @@index([category])
+  @@index([status])
+}
+
+model VerificationRecord {
+  id                   String              @id @default(uuid())
+  documentSubmissionId String?
+  documentSubmission   DocumentSubmission? @relation(fields: [documentSubmissionId], references: [id], onDelete: Cascade)
+
+  certificationId      String?
+  achievementId        String?
+
+  studentId            String
+  student              StudentProfile      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  reviewerStaffId      String?
+  reviewerStaff        StaffProfile?       @relation(fields: [reviewerStaffId], references: [id], onDelete: SetNull)
+  reviewerName         String
+  reviewerEmail        String
+  reviewerRole         String              @default("STAFF")
+
+  decision             VerificationStatus
+  comments             String?             @db.Text
+  createdAt            DateTime            @default(now())
+
+  @@index([documentSubmissionId])
+  @@index([studentId])
+  @@index([reviewerStaffId])
+  @@index([decision])
+  @@index([createdAt])
+}
