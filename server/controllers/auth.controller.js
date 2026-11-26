@@ -75,7 +75,11 @@ export async function login(req, res, next) {
       }
     }
 
-    const secret = process.env.JWT_SECRET || 'fallback_secret_for_dev_mode';
+    const secret = process.env.JWT_SECRET;
+
+if (!secret) {
+  throw new Error('JWT_SECRET environment variable is not configured');
+}
     const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
 
     const token = jwt.sign(
