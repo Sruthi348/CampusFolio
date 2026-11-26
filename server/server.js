@@ -105,21 +105,6 @@ async function startServer() {
   }
 
   const server = app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-
-  const shutdown = async () => {
-    server.close(async () => {
-      await prisma.$disconnect();
-      process.exit(0);
-    });
-  };
-
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
-}
-
-  const server = app.listen(PORT, () => {
     console.log(`=======================================================`);
     console.log(`🚀 Centralized Student Portfolio API running on port ${PORT}`);
     console.log(`🌐 Base URL: http://localhost:${PORT}`);
