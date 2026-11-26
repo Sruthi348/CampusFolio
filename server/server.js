@@ -86,6 +86,14 @@ app.use('/api/*', (req, res) => {
   });
 });
 
+// Serve frontend static build in production
+const clientDist = path.resolve(__dirname, '../client/dist');
+app.use(express.static(clientDist));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(clientDist, 'index.html'));
+});
+
 // Centralized error handler
 app.use(errorHandler);
 

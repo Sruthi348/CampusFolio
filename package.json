@@ -1,0 +1,11 @@
+{
+  "name": "campusfolio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install --prefix client && npm install --prefix server",
+    "build": "npm run install:all && npm run build --prefix client && npm run --prefix server prisma:generate && npm run --prefix server prisma:push && node server/prisma/seed.js",
+    "start": "node server/server.js"
+  }
+}

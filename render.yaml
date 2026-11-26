@@ -5,13 +5,11 @@ databases:
     plan: free
 
 services:
-  # Backend Express API Service
   - type: web
-    name: campusfolio-api
+    name: campusfolio
     runtime: node
-    rootDir: server
     plan: free
-    buildCommand: npm install && npx prisma generate && npx prisma db push && node prisma/seed.js
+    buildCommand: npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -22,22 +20,3 @@ services:
           property: connectionString
       - key: JWT_SECRET
         generateValue: true
-
-  # Frontend React (Vite) Static Site
-  - type: web
-    name: campusfolio-app
-    runtime: static
-    rootDir: client
-    plan: free
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: campusfolio-api
-          property: host
