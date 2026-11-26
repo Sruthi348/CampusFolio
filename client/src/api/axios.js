@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const formattedApiUrl = rawApiUrl
+  ? (rawApiUrl.startsWith('http') ? rawApiUrl : `https://${rawApiUrl}`)
+  : '';
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
+  baseURL: formattedApiUrl ? `${formattedApiUrl}/api` : '/api',
   headers: {
     'Content-Type': 'application/json'
   }
