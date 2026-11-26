@@ -9,6 +9,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm run build
+    preDeployCommand: npm run db:init
     startCommand: npm start
     envVars:
       - key: NODE_ENV
