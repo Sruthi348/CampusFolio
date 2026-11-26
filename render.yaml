@@ -10,13 +10,11 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm install --prefix client --legacy-peer-deps && npm --prefix client run build && npm install --prefix server && npx prisma generate --schema=server/prisma/schema.prisma
+    buildCommand: npm install --prefix server
     startCommand: npx prisma db push --schema=server/prisma/schema.prisma --accept-data-loss && node server/prisma/seed.js && node server/server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NODE_VERSION
-        value: 20
       - key: DATABASE_URL
         fromDatabase:
           name: campusfolio-db

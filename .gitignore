@@ -19,8 +19,8 @@ server/uploads/csv/*
 !server/uploads/documents/.gitkeep
 !server/uploads/csv/.gitkeep
 
-# Build output
-client/dist/
+# Build output (included for deployment)
+# client/dist/
 
 # Logs
 *.log
