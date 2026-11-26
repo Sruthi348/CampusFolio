@@ -91,11 +91,33 @@ app.use(errorHandler);
 
 // Graceful server startup
 async function startServer() {
-  try {
-    await ensurePostgresRunning();
-  } catch (err) {
-    console.warn('[PostgreSQL] Could not start embedded instance (may already be running or external):', err.message);
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      await ensurePostgresRunning();
+    } catch (err) {
+      console.warn(
+        '[PostgreSQL] Could not start embedded instance:',
+        err.message
+      );
+    }
+  } else {
+    console.log('[PostgreSQL] Using external PostgreSQL database.');
   }
+
+  const server = app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+
+  const shutdown = async () => {
+    server.close(async () => {
+      await prisma.$disconnect();
+      process.exit(0);
+    });
+  };
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
+}
 
   const server = app.listen(PORT, () => {
     console.log(`=======================================================`);
