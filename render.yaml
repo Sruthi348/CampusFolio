@@ -1,7 +1,6 @@
 databases:
   - name: campusfolio-db
     databaseName: student_portfolio
-    user: postgres
     plan: free
 
 services:
