@@ -15,7 +15,11 @@ export async function authenticateToken(req, res, next) {
       });
     }
 
-    const secret = process.env.JWT_SECRET || 'fallback_secret_for_dev_mode';
+    const secret = process.env.JWT_SECRET;
+
+if (!secret) {
+  throw new Error('JWT_SECRET environment variable is not configured');
+}
     const decoded = jwt.verify(token, secret);
 
     const user = await prisma.user.findUnique({
