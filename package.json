@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "install:all": "npm install --prefix client --legacy-peer-deps && npm install --prefix server",
+    "install:all": "npm install --prefix client --legacy-peer-deps && npm install --prefix server --include=dev",
     "build": "npm run install:all && npm run build --prefix client && npm run --prefix server prisma:generate",
     "db:init": "npx prisma db push --schema=server/prisma/schema.prisma --accept-data-loss && node server/prisma/seed.js",
     "start": "node server/server.js"

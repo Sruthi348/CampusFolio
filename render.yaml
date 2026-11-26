@@ -2,12 +2,14 @@ databases:
   - name: campusfolio-db
     databaseName: student_portfolio
     plan: free
+    region: singapore
 
 services:
   - type: web
     name: campusfolio
     runtime: node
     plan: free
+    region: singapore
     buildCommand: npm run build
     startCommand: npm run db:init && npm start
     envVars:
