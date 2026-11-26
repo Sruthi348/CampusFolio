@@ -6,7 +6,7 @@ databases:
 
 services:
   - type: web
-    name: campusfolio
+    name: campusfolio-web
     runtime: node
     plan: free
     region: singapore
