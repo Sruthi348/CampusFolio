@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "install:all": "npm install --prefix client --legacy-peer-deps && npm install --prefix server --include=dev",
-    "build": "npm run install:all && npm run build --prefix client && npm run --prefix server prisma:generate",
-    "db:init": "npx prisma db push --schema=server/prisma/schema.prisma --accept-data-loss && node server/prisma/seed.js",
-    "start": "node server/server.js"
+    "build": "npm install --prefix client --legacy-peer-deps && npm --prefix client run build && npm install --prefix server && npx prisma generate --schema=server/prisma/schema.prisma",
+    "start": "npx prisma db push --schema=server/prisma/schema.prisma --accept-data-loss && node server/prisma/seed.js && node server/server.js"
   }
 }
