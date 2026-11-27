@@ -2,6 +2,7 @@ import { z } from 'zod';
 import prisma from '../prisma/prismaClient.js';
 import { generateUniqueSlug } from '../utils/slugGenerator.js';
 import { calculateProfileCompletion } from '../utils/completionCalc.js';
+import { syncStudentVerificationAndPublish } from '../services/verificationGate.service.js';
 
 // Helper to get current authenticated student profile
 async function getStudentProfileByUserId(userId) {
@@ -155,16 +156,10 @@ export async function togglePublish(req, res, next) {
     });
     if (!profile) return res.status(404).json({ success: false, message: 'Profile not found.' });
 
-    const { isPublished } = req.body;
-    const updated = await prisma.studentProfile.update({
-      where: { id: profile.id },
-      data: { isPublished: Boolean(isPublished) }
-    });
-
-    return res.json({
-      success: true,
-      message: updated.isPublished ? 'Portfolio is now published publicly.' : 'Portfolio is now hidden from public view.',
-      isPublished: updated.isPublished
+    // Public portfolio link activation is governed strictly by staff verification gate
+    return res.status(403).json({
+      success: false,
+      message: 'Portfolio activation is governed by staff verification. The public portfolio link activates automatically once all submitted sections and supporting documents are verified and approved by your assigned faculty tutor.'
     });
   } catch (error) {
     next(error);
@@ -959,6 +954,9 @@ export async function submitDocument(req, res, next) {
       }
     });
 
+    // Submitting a new document re-checks publish status (held pending staff verification)
+    await syncStudentVerificationAndPublish(profile.id);
+
     return res.status(201).json({
       success: true,
       message: 'Document submitted successfully. Status is marked as Pending Verification.',
@@ -1018,6 +1016,9 @@ export async function resubmitDocument(req, res, next) {
       }
     });
 
+    // Resubmission re-evaluates verification gate
+    await syncStudentVerificationAndPublish(profile.id);
+
     return res.json({
       success: true,
       message: 'Document resubmitted successfully. It is now Pending Verification by your Staff reviewer.',
@@ -1051,6 +1052,7 @@ export async function deleteDocument(req, res, next) {
     }
 
     await prisma.documentSubmission.delete({ where: { id } });
+    await syncStudentVerificationAndPublish(profile.id);
     return res.json({ success: true, message: 'Document submission deleted successfully.' });
   } catch (error) {
     next(error);

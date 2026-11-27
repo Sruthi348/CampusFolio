@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import prisma from '../prisma/prismaClient.js';
+import { syncStudentVerificationAndPublish } from '../services/verificationGate.service.js';
 
 // Helper to retrieve the current staff member's profile
 async function getStaffProfile(userId) {
@@ -529,6 +530,9 @@ export async function recordVerificationDecision(req, res, next) {
 
       return { updatedSubmission, record };
     });
+
+    // Auto-sync public portfolio activation based on staff verification gate
+    await syncStudentVerificationAndPublish(submission.studentId);
 
     const statusDisplay = decision === 'VERIFIED'
       ? 'Approved / Verified'

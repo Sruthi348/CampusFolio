@@ -57,7 +57,7 @@ export async function getPublicPortfolio(req, res, next) {
     if (!profile.isApproved || !profile.isPublished || !isAllowedStatus) {
       return res.status(404).json({
         success: false,
-        message: 'This portfolio is not publicly available or has been suspended.'
+        message: 'This portfolio is pending faculty verification and will become publicly accessible once all submitted documents and sections are verified by the assigned staff.'
       });
     }
 

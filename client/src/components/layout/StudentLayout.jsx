@@ -52,9 +52,10 @@ export function StudentLayout() {
 
   const profile = profileSummary?.profile;
   const completion = profileSummary?.completion?.percentage || 0;
-  const slug = profile?.slug;
+  const slug = profile?.slug || (profile?.fullName ? profile.fullName.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') : '');
 
   const navItems = [
+    { name: 'Overview', to: '/dashboard', icon: LayoutDashboard, end: true },
     { name: 'My Profile', to: '/dashboard/profile', icon: User },
     { name: 'Education', to: '/dashboard/education', icon: GraduationCap },
     { name: 'Skills & Interests', to: '/dashboard/skills', icon: Sparkles },

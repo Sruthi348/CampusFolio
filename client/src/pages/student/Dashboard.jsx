@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import {
-  FolderGit2,
-  Award,
-  Trophy,
-  Briefcase,
   ExternalLink,
   Copy,
   Check,
-  PlusCircle,
   ArrowRight,
   ShieldCheck,
   Clock,
   Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  FileCheck2,
-  AlertTriangle,
-  User,
-  GraduationCap
+  CheckCircle2
 } from 'lucide-react';
 
 export function Dashboard() {
@@ -44,8 +34,9 @@ export function Dashboard() {
   const completion = profileSummary?.completion?.percentage || 0;
   const checklist = profileSummary?.completion?.checklist || [];
 
-  const slug = profile?.slug;
-  const publicUrl = slug ? `${window.location.origin}/student/${slug}` : '';
+  // Generate student-specific unique portfolio URL using their own slug
+  const studentSlug = profile?.slug || profile?.fullName?.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') || '';
+  const publicUrl = studentSlug ? `${window.location.origin}/student/${studentSlug}` : '';
 
   const handleCopy = () => {
     if (!publicUrl) return;
@@ -54,24 +45,23 @@ export function Dashboard() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const projects = profile?.projects || [];
-  const certs = profile?.certifications || [];
   const docs = profile?.documentSubmissions || [];
-
   const verifiedDocs = docs.filter(d => d.status === 'VERIFIED').length;
   const pendingDocs = docs.filter(d => d.status === 'PENDING').length;
   const correctionDocs = docs.filter(d => ['REJECTED', 'RESUBMISSION_REQUIRED'].includes(d.status)).length;
 
+  const isPubliclyActive = profile?.isPublished && pendingDocs === 0 && correctionDocs === 0;
+
   // Identify next uncompleted step for the primary action
   const nextStep = checklist.find(c => !c.completed) || {
     label: 'Preview your published portfolio',
-    path: `/student/${slug}`
+    path: `/student/${studentSlug}`
   };
 
   return (
     <div className="space-y-6">
       
-      {/* 1. Header & Welcome Area */}
+      {/* SECTION A: Institutional Portfolio Workspace */}
       <div className="bg-[#FFFFFF] border border-[#DCE3EC] rounded-2xl p-6 sm:p-7 shadow-[0_1px_3px_rgba(20,43,74,0.05)]">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-1.5">
@@ -79,7 +69,7 @@ export function Dashboard() {
               <Sparkles className="w-3.5 h-3.5 text-[#142B4A]" />
               Institutional Portfolio Workspace
             </div>
-            {/* Exactly "Welcome, [Student Name]" as specified in section 7 */}
+            {/* Welcome message displaying the student's name */}
             <h1 className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
               Welcome, {profile?.fullName || 'Student'}
             </h1>
@@ -88,11 +78,25 @@ export function Dashboard() {
             </p>
           </div>
 
-          {/* Unique Public URL Box */}
+          {/* Student-Specific Unique Public URL Box */}
           <div className="bg-[#F4F6F9] border border-[#DCE3EC] rounded-xl p-4 max-w-md w-full">
-            <span className="text-xs font-bold text-[#526175] uppercase tracking-wider block mb-1.5">
-              Your Unique Public Portfolio URL
-            </span>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-bold text-[#526175] uppercase tracking-wider block">
+                Your Unique Public Portfolio URL
+              </span>
+              {isPubliclyActive ? (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100/70 px-2 py-0.5 rounded-full">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                  Active & Verified
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full" title="Activates automatically once all documents and sections are verified by your assigned faculty tutor">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
+                  Pending Verification
+                </span>
+              )}
+            </div>
+
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -108,9 +112,9 @@ export function Dashboard() {
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 {copied ? 'Copied' : 'Copy'}
               </button>
-              {slug && (
+              {studentSlug && (
                 <a
-                  href={`/student/${slug}`}
+                  href={`/student/${studentSlug}`}
                   target="_blank"
                   rel="noreferrer"
                   className="p-2 bg-[#FFFFFF] border border-[#DCE3EC] text-[#243F64] hover:text-[#142B4A] hover:bg-[#E9EFF6] rounded-lg shrink-0 transition"
@@ -120,14 +124,20 @@ export function Dashboard() {
                 </a>
               )}
             </div>
+            {!isPubliclyActive && (
+              <p className="text-[11px] text-[#526175] mt-1.5 flex items-center gap-1">
+                <Clock className="w-3 h-3 text-amber-600 shrink-0" />
+                <span>Link activates automatically once your assigned tutor verifies your submissions.</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
 
-      {/* 2. Structured Asymmetric Grid: Profile Completion & Verification Progress */}
+      {/* Grid containing Section B & Section C */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Left: Meaningful Progress & Primary Action Highlight (7 cols) */}
+        {/* SECTION B: Profile Strength & Readiness (7 cols) */}
         <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#DCE3EC] rounded-2xl p-6 shadow-[0_1px_3px_rgba(20,43,74,0.05)] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EC]">
@@ -196,7 +206,7 @@ export function Dashboard() {
           </div>
         </div>
 
-        {/* Right: Verification Progress & Faculty Review Status (5 cols) */}
+        {/* SECTION C: Document Verification (5 cols) */}
         <div className="lg:col-span-5 bg-[#FFFFFF] border border-[#DCE3EC] rounded-2xl p-6 shadow-[0_1px_3px_rgba(20,43,74,0.05)] flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EC]">
@@ -258,215 +268,6 @@ export function Dashboard() {
               Upload Evidence <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
-        </div>
-
-      </div>
-
-      {/* 3. Useful Shortcuts Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link
-          to="/dashboard/projects"
-          className="p-4 rounded-xl bg-[#FFFFFF] border border-[#DCE3EC] hover:border-[#142B4A] hover:shadow-xs transition-all flex items-center gap-3.5 group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-[#E9EFF6] text-[#142B4A] flex items-center justify-center shrink-0 group-hover:bg-[#142B4A] group-hover:text-white transition-colors">
-            <FolderGit2 className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-sm font-bold text-[#0F172A] block truncate">Projects</span>
-            <span className="text-xs text-[#526175]">{projects.length} recorded</span>
-          </div>
-        </Link>
-
-        <Link
-          to="/dashboard/certifications"
-          className="p-4 rounded-xl bg-[#FFFFFF] border border-[#DCE3EC] hover:border-[#142B4A] hover:shadow-xs transition-all flex items-center gap-3.5 group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-[#E9EFF6] text-[#142B4A] flex items-center justify-center shrink-0 group-hover:bg-[#142B4A] group-hover:text-white transition-colors">
-            <Award className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-sm font-bold text-[#0F172A] block truncate">Certifications</span>
-            <span className="text-xs text-[#526175]">{certs.length} entries</span>
-          </div>
-        </Link>
-
-        <Link
-          to="/dashboard/verification"
-          className="p-4 rounded-xl bg-[#FFFFFF] border border-[#DCE3EC] hover:border-[#142B4A] hover:shadow-xs transition-all flex items-center gap-3.5 group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-[#E9EFF6] text-[#142B4A] flex items-center justify-center shrink-0 group-hover:bg-[#142B4A] group-hover:text-white transition-colors">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-sm font-bold text-[#0F172A] block truncate">Verification</span>
-            <span className="text-xs text-[#526175]">{docs.length} submitted</span>
-          </div>
-        </Link>
-
-        <Link
-          to="/dashboard/profile"
-          className="p-4 rounded-xl bg-[#FFFFFF] border border-[#DCE3EC] hover:border-[#142B4A] hover:shadow-xs transition-all flex items-center gap-3.5 group"
-        >
-          <div className="w-10 h-10 rounded-lg bg-[#E9EFF6] text-[#142B4A] flex items-center justify-center shrink-0 group-hover:bg-[#142B4A] group-hover:text-white transition-colors">
-            <User className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-sm font-bold text-[#0F172A] block truncate">Edit Profile</span>
-            <span className="text-xs text-[#526175]">Bio & Details</span>
-          </div>
-        </Link>
-      </div>
-
-      {/* 4. Recent Projects & Document Timeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        {/* Projects Preview (7 cols) */}
-        <div className="lg:col-span-7 bg-[#FFFFFF] border border-[#DCE3EC] rounded-2xl p-6 shadow-[0_1px_3px_rgba(20,43,74,0.05)]">
-          <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EC] mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-[#0F172A] flex items-center gap-2">
-                <FolderGit2 className="w-5 h-5 text-[#142B4A]" />
-                Recent Projects
-              </h2>
-              <p className="text-sm text-[#526175] mt-0.5">
-                Technical solutions showcased on your public page
-              </p>
-            </div>
-            <Link
-              to="/dashboard/projects"
-              className="text-sm font-bold text-[#142B4A] hover:underline"
-            >
-              Manage ({projects.length})
-            </Link>
-          </div>
-
-          {projects.length === 0 ? (
-            <div className="py-10 text-center border-2 border-dashed border-[#DCE3EC] rounded-xl">
-              <FolderGit2 className="w-9 h-9 text-[#B9C9DD] mx-auto mb-2" />
-              <p className="text-sm font-semibold text-[#0F172A]">No projects recorded yet</p>
-              <p className="text-sm text-[#526175] mt-0.5 max-w-xs mx-auto">
-                Add projects to demonstrate your practical technical abilities to recruiters.
-              </p>
-              <Link
-                to="/dashboard/projects"
-                className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#142B4A] hover:bg-[#243F64] text-white text-sm font-semibold rounded-lg transition"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Add Your First Project
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {projects.slice(0, 3).map((proj) => (
-                <div
-                  key={proj.id}
-                  className="p-4 rounded-xl border border-[#DCE3EC] bg-[#F4F6F9] hover:bg-[#FFFFFF] hover:border-[#142B4A] transition-all flex items-start justify-between gap-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-[#0F172A] truncate">{proj.title}</span>
-                      {proj.isFeatured && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded badge-approved">
-                          Featured
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-[#526175] line-clamp-1 mt-1">
-                      {proj.summary || proj.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5 mt-2.5">
-                      {proj.technologies?.slice(0, 3).map((t) => (
-                        <span
-                          key={t.skill.id}
-                          className="text-xs px-2 py-0.5 rounded bg-[#FFFFFF] text-[#243F64] border border-[#DCE3EC] font-medium"
-                        >
-                          {t.skill.name}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Link
-                    to="/dashboard/projects"
-                    className="p-2 text-[#526175] hover:text-[#142B4A] rounded-lg transition shrink-0"
-                    title="Edit project"
-                  >
-                    <ArrowRight className="w-4.5 h-4.5" />
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Recent Document Submissions (5 cols) */}
-        <div className="lg:col-span-5 bg-[#FFFFFF] border border-[#DCE3EC] rounded-2xl p-6 shadow-[0_1px_3px_rgba(20,43,74,0.05)]">
-          <div className="flex items-center justify-between pb-3 border-b border-[#DCE3EC] mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-[#0F172A] flex items-center gap-2">
-                <FileCheck2 className="w-5 h-5 text-[#142B4A]" />
-                Verification Status
-              </h2>
-              <p className="text-sm text-[#526175] mt-0.5">
-                Recently submitted certificates & evidence
-              </p>
-            </div>
-            <Link
-              to="/dashboard/verification"
-              className="text-sm font-bold text-[#142B4A] hover:underline"
-            >
-              Upload
-            </Link>
-          </div>
-
-          {docs.length === 0 ? (
-            <div className="py-10 text-center border-2 border-dashed border-[#DCE3EC] rounded-xl">
-              <ShieldCheck className="w-9 h-9 text-[#B9C9DD] mx-auto mb-2" />
-              <p className="text-sm font-semibold text-[#0F172A]">No documents submitted</p>
-              <p className="text-sm text-[#526175] mt-0.5 max-w-xs mx-auto">
-                Submit course certificates or academic credentials for class tutor verification.
-              </p>
-              <Link
-                to="/dashboard/verification"
-                className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#142B4A] hover:bg-[#243F64] text-white text-sm font-semibold rounded-lg transition"
-              >
-                Submit Document
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {docs.slice(0, 4).map((doc) => (
-                <div
-                  key={doc.id}
-                  className="p-3.5 rounded-xl border border-[#DCE3EC] bg-[#F4F6F9] flex items-center justify-between gap-3 text-sm"
-                >
-                  <div className="min-w-0 flex-1">
-                    <span className="font-semibold text-[#0F172A] truncate block">{doc.title}</span>
-                    <span className="text-xs text-[#526175] block mt-0.5">
-                      {doc.category} • {new Date(doc.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div>
-                    {doc.status === 'VERIFIED' && (
-                      <span className="px-2.5 py-1 rounded text-xs font-semibold badge-approved">
-                        Verified
-                      </span>
-                    )}
-                    {doc.status === 'PENDING' && (
-                      <span className="px-2.5 py-1 rounded text-xs font-semibold badge-pending">
-                        In Review
-                      </span>
-                    )}
-                    {['REJECTED', 'RESUBMISSION_REQUIRED'].includes(doc.status) && (
-                      <span className="px-2.5 py-1 rounded text-xs font-semibold badge-correction">
-                        Correction Req
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
 
       </div>

@@ -43,7 +43,7 @@ export function Login() {
       } else if (user.role === 'STAFF') {
         navigate('/staff');
       } else {
-        navigate(from === '/' || from.startsWith('/admin') || from.startsWith('/staff') ? '/dashboard/profile' : from);
+        navigate(from === '/' || from.startsWith('/admin') || from.startsWith('/staff') ? '/dashboard' : from);
       }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Authentication failed. Please verify credentials.');

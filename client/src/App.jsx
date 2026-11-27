@@ -95,7 +95,7 @@ export function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Navigate to="profile" replace />} />
+            <Route index element={<Dashboard />} />
             <Route path="profile" element={<ProfileEdit />} />
             <Route path="education" element={<EducationEdit />} />
             <Route path="skills" element={<SkillsEdit />} />

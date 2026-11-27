@@ -243,7 +243,6 @@ export function LinksEdit() {
                 >
                   <option value="GitHub">GitHub</option>
                   <option value="LinkedIn">LinkedIn</option>
-                  <option value="Portfolio">Personal Portfolio</option>
                   <option value="LeetCode">LeetCode</option>
                   <option value="Twitter">Twitter / X</option>
                   <option value="Google Scholar">Google Scholar</option>
