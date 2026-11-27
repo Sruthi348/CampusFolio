@@ -36,7 +36,7 @@ export function Dashboard() {
 
   // Generate student-specific unique portfolio URL using their own slug
   const studentSlug = profile?.slug || profile?.fullName?.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-') || '';
-  const publicUrl = studentSlug ? `${window.location.origin}/student/${studentSlug}` : '';
+  const publicUrl = studentSlug ? `https://campusfolio/student/${studentSlug}` : '';
 
   const handleCopy = () => {
     if (!publicUrl) return;
