@@ -146,8 +146,7 @@ export function Login() {
         </div>
 
         {/* Brand Footer */}
-        <div className="relative z-10 text-sm text-[#B9C9DD]/80 flex items-center justify-between pt-6 border-t border-[#B9C9DD]/10">
-          <span>© {new Date().getFullYear()} CampusFolio System</span>
+        <div className="relative z-10 text-xs text-[#B9C9DD]/80 flex items-center justify-end pt-6 border-t border-[#B9C9DD]/10">
           <span className="font-medium">University Portal Access</span>
         </div>
       </div>
