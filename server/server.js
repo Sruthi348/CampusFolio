@@ -109,14 +109,20 @@ async function startServer() {
       );
     }
   } else {
-    console.log('[PostgreSQL] Using external PostgreSQL database.');
+    console.log('[PostgreSQL] Connecting to external database...');
+    try {
+      await prisma.$connect();
+      console.log('✅ Connected to external PostgreSQL successfully.');
+    } catch (err) {
+      console.warn('⚠️ Database connection check:', err.message);
+    }
   }
 
-  const server = app.listen(PORT, () => {
+  const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`=======================================================`);
     console.log(`🚀 Centralized Student Portfolio API running on port ${PORT}`);
-    console.log(`🌐 Base URL: http://localhost:${PORT}`);
-    console.log(`📁 Uploads available at: http://localhost:${PORT}/uploads`);
+    console.log(`🌐 Bound to: 0.0.0.0:${PORT}`);
+    console.log(`📁 Uploads available at: /uploads`);
     console.log(`=======================================================`);
   });
 
