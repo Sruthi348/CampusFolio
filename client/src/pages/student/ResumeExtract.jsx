@@ -33,6 +33,7 @@ export function ResumeExtract() {
 
   // File upload state
   const [file, setFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [error, setError] = useState('');
   
@@ -44,9 +45,7 @@ export function ResumeExtract() {
   const [importing, setImporting] = useState(false);
   const [importSuccess, setImportSuccess] = useState(null);
 
-  const handleFileChange = (e) => {
-    setError('');
-    const selected = e.target.files?.[0];
+  const processSelectedFile = (selected) => {
     if (!selected) return;
 
     const validExtensions = ['.pdf', '.docx', '.doc'];
@@ -64,7 +63,33 @@ export function ResumeExtract() {
       return;
     }
 
+    setError('');
     setFile(selected);
+  };
+
+  const handleFileChange = (e) => {
+    const selected = e.target.files?.[0];
+    processSelectedFile(selected);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const dropped = e.dataTransfer.files?.[0];
+    if (dropped) processSelectedFile(dropped);
   };
 
   const handleExtractSubmit = async (e) => {
@@ -83,7 +108,7 @@ export function ResumeExtract() {
 
     try {
       const res = await api.post('/students/me/resume/extract', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': undefined }
       });
 
       if (res.data.success && res.data.extracted) {
@@ -285,10 +310,16 @@ export function ResumeExtract() {
             
             {/* Dropzone */}
             <div
-              className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-colors ${
-                file
+              onClick={() => document.getElementById('resumeFileInput')?.click()}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center transition-all cursor-pointer ${
+                isDragging
+                  ? 'border-[#142B4A] bg-[#E9EFF6] scale-[1.01]'
+                  : file
                   ? 'border-[#142B4A] bg-[#E9EFF6]/30'
-                  : 'border-[#B9C9DD] hover:border-[#142B4A] bg-[#F4F6F9]/50'
+                  : 'border-[#B9C9DD] hover:border-[#142B4A] hover:bg-[#F4F6F9] bg-[#F4F6F9]/50'
               }`}
             >
               <input
@@ -296,6 +327,7 @@ export function ResumeExtract() {
                 id="resumeFileInput"
                 accept=".pdf,.docx,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 onChange={handleFileChange}
+                onClick={(e) => e.stopPropagation()}
                 className="hidden"
               />
 

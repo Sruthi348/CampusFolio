@@ -449,22 +449,32 @@ export function extractWithRules(rawText) {
   const skills = [];
   const skillsText = sections.skills.join(' ') + ' ' + rawText;
 
+  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   for (const tech of technicalSkillsList) {
-    const regex = new RegExp(`\\b${tech.replace('.', '\\.')}\\b`, 'i');
-    if (regex.test(skillsText) && !skills.some(s => s.name.toLowerCase() === tech.toLowerCase())) {
+    let matched = false;
+    if (tech === 'C++') {
+      matched = /(?:^|\W)c\+\+(?:$|\W)/i.test(skillsText);
+    } else if (tech === 'C') {
+      matched = /(?:^|\s|[.,;])c(?:$|\s|[.,;])/i.test(skillsText);
+    } else {
+      const regex = new RegExp(`\\b${escapeRegex(tech)}\\b`, 'i');
+      matched = regex.test(skillsText);
+    }
+    if (matched && !skills.some(s => s.name.toLowerCase() === tech.toLowerCase())) {
       skills.push({ name: tech, category: 'TECHNICAL', proficiency: 'Intermediate' });
     }
   }
 
   for (const soft of softSkillsList) {
-    const regex = new RegExp(`\\b${soft}\\b`, 'i');
+    const regex = new RegExp(`\\b${escapeRegex(soft)}\\b`, 'i');
     if (regex.test(skillsText) && !skills.some(s => s.name.toLowerCase() === soft.toLowerCase())) {
       skills.push({ name: soft, category: 'SOFT', proficiency: 'Advanced' });
     }
   }
 
   for (const interest of interestsList) {
-    const regex = new RegExp(`\\b${interest}\\b`, 'i');
+    const regex = new RegExp(`\\b${escapeRegex(interest)}\\b`, 'i');
     if (regex.test(skillsText) && !skills.some(s => s.name.toLowerCase() === interest.toLowerCase())) {
       skills.push({ name: interest, category: 'INTEREST', proficiency: 'Intermediate' });
     }
