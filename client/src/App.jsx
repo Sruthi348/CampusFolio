@@ -11,6 +11,7 @@ import { Departments } from './pages/Departments';
 import { Projects } from './pages/Projects';
 import { StudentPortfolio } from './pages/StudentPortfolio';
 import { Login } from './pages/Login';
+import { VisitorLogin } from './pages/VisitorLogin';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { Privacy } from './pages/Privacy';
 
@@ -22,6 +23,7 @@ import { EducationEdit } from './pages/student/EducationEdit';
 import { SkillsEdit } from './pages/student/SkillsEdit';
 import { ProjectsEdit } from './pages/student/ProjectsEdit';
 import { CertificationsEdit } from './pages/student/CertificationsEdit';
+import { ResumeExtract } from './pages/student/ResumeExtract';
 import { ExperienceEdit } from './pages/student/ExperienceEdit';
 import { AchievementsEdit } from './pages/student/AchievementsEdit';
 import { ExtracurricularsEdit } from './pages/student/ExtracurricularsEdit';
@@ -60,6 +62,7 @@ export function App() {
     location.pathname.startsWith('/staff') || 
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/visitor-login') ||
     location.pathname.startsWith('/forgot-password') ||
     location.pathname.startsWith('/reset-password');
 
@@ -79,6 +82,7 @@ export function App() {
           <Route path="/projects" element={<Projects />} />
           <Route path="/student/:username" element={<StudentPortfolio />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/visitor-login" element={<VisitorLogin />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ForgotPassword />} />
           <Route path="/privacy" element={<Privacy />} />
@@ -98,6 +102,7 @@ export function App() {
             <Route path="skills" element={<SkillsEdit />} />
             <Route path="projects" element={<ProjectsEdit />} />
             <Route path="certifications" element={<CertificationsEdit />} />
+            <Route path="resume-extract" element={<ResumeExtract />} />
             <Route path="verification" element={<DocumentVerification />} />
             <Route path="experience" element={<ExperienceEdit />} />
             <Route path="achievements" element={<AchievementsEdit />} />

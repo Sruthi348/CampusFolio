@@ -11,6 +11,7 @@ enum Role {
   STUDENT
   STAFF
   ADMIN
+  VISITOR
 }
 
 enum StudentStatus {
@@ -67,7 +68,21 @@ model User {
   updatedAt           DateTime             @updatedAt
   studentProfile      StudentProfile?
   staffProfile        StaffProfile?
+  visitorProfile      VisitorProfile?
   passwordResetTokens PasswordResetToken[]
+}
+
+model VisitorProfile {
+  id           String   @id @default(uuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName     String
+  organization String?
+  purpose      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model Department {

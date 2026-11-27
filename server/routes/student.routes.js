@@ -33,6 +33,8 @@ import {
   resubmitDocument,
   deleteDocument
 } from '../controllers/student.controller.js';
+import { parseResumeUpload, importExtractedData } from '../controllers/resumeExtract.controller.js';
+import { uploadResume } from '../middleware/upload.middleware.js';
 
 const router = express.Router();
 
@@ -83,5 +85,9 @@ router.get('/me/documents', getMyDocuments);
 router.post('/me/documents', submitDocument);
 router.put('/me/documents/:id/resubmit', resubmitDocument);
 router.delete('/me/documents/:id', deleteDocument);
+
+// Resume Extract & Import
+router.post('/me/resume/extract', uploadResume.single('resume'), parseResumeUpload);
+router.post('/me/resume/import', importExtractedData);
 
 export default router;

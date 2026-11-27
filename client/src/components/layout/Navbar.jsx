@@ -13,11 +13,12 @@ import {
   Menu,
   X,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  UserCheck
 } from 'lucide-react';
 
 export function Navbar() {
-  const { user, isAuthenticated, isAdmin, isStaff, isStudent, logout } = useAuth();
+  const { user, isAuthenticated, isAdmin, isStaff, isStudent, isVisitor, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -141,6 +142,22 @@ export function Navbar() {
                   </Link>
                 )}
 
+                {isVisitor && (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[#E9EFF6] text-[#142B4A] border border-[#B9C9DD]">
+                      <UserCheck className="w-3.5 h-3.5 text-[#243F64]" />
+                      <span>{user?.visitorProfile?.fullName || 'Visitor'}</span>
+                    </span>
+                    <Link
+                      to="/search"
+                      className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold bg-[#142B4A] text-white hover:bg-[#243F64] shadow-xs transition-colors"
+                    >
+                      <Search className="w-4 h-4" />
+                      Browse Portfolios
+                    </Link>
+                  </div>
+                )}
+
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-[#526175] hover:text-[#A82222] hover:bg-[#FDF0F0] transition-colors cursor-pointer"
@@ -153,10 +170,11 @@ export function Navbar() {
             ) : (
               <div className="flex items-center gap-2.5">
                 <Link
-                  to="/search"
-                  className="text-sm font-semibold text-[#526175] hover:text-[#0F172A] px-3.5 py-2 rounded-lg hover:bg-[#F4F6F9] transition-colors"
+                  to="/visitor-login"
+                  className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold border border-[#DCE3EC] text-[#142B4A] hover:bg-[#F4F6F9] transition-colors"
                 >
-                  Search Talent
+                  <UserCheck className="w-4 h-4 text-[#243F64]" />
+                  <span>Visitor Sign In</span>
                 </Link>
                 <Link
                   to="/login"
@@ -246,6 +264,16 @@ export function Navbar() {
                     Admin Governance Portal
                   </Link>
                 )}
+                {isVisitor && (
+                  <Link
+                    to="/search"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold bg-[#142B4A] text-white"
+                  >
+                    <Search className="w-4 h-4" />
+                    Browse Portfolios
+                  </Link>
+                )}
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-semibold text-[#A82222] bg-[#FDF0F0] hover:bg-[#FCA5A5]/40 transition-colors"
@@ -255,13 +283,23 @@ export function Navbar() {
                 </button>
               </>
             ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold bg-[#142B4A] text-white"
-              >
-                Sign In to CampusFolio
-              </Link>
+              <div className="space-y-2">
+                <Link
+                  to="/visitor-login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold border border-[#DCE3EC] text-[#142B4A] hover:bg-[#F4F6F9]"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  Visitor Sign In
+                </Link>
+                <Link
+                  to="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold bg-[#142B4A] text-white"
+                >
+                  Portal Sign In
+                </Link>
+              </div>
             )}
           </div>
         </div>

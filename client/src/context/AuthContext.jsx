@@ -53,6 +53,32 @@ export const AuthProvider = ({ children }) => {
     throw new Error(res.data.message || 'Login failed');
   };
 
+  const visitorLogin = async (email, password) => {
+    const res = await api.post('/auth/visitor/login', { email, password });
+    if (res.data.success) {
+      const { token: receivedToken, user: receivedUser } = res.data;
+      setToken(receivedToken);
+      setUser(receivedUser);
+      localStorage.setItem('token', receivedToken);
+      localStorage.setItem('user', JSON.stringify(receivedUser));
+      return receivedUser;
+    }
+    throw new Error(res.data.message || 'Visitor login failed');
+  };
+
+  const visitorRegister = async (formData) => {
+    const res = await api.post('/auth/visitor/register', formData);
+    if (res.data.success) {
+      const { token: receivedToken, user: receivedUser } = res.data;
+      setToken(receivedToken);
+      setUser(receivedUser);
+      localStorage.setItem('token', receivedToken);
+      localStorage.setItem('user', JSON.stringify(receivedUser));
+      return receivedUser;
+    }
+    throw new Error(res.data.message || 'Visitor registration failed');
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -77,12 +103,15 @@ export const AuthProvider = ({ children }) => {
     token,
     loading,
     login,
+    visitorLogin,
+    visitorRegister,
     logout,
     refreshUser,
     isAuthenticated: Boolean(token && user),
     isAdmin: user?.role === 'ADMIN',
     isStaff: user?.role === 'STAFF',
-    isStudent: user?.role === 'STUDENT'
+    isStudent: user?.role === 'STUDENT',
+    isVisitor: user?.role === 'VISITOR'
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -41,7 +41,8 @@ export async function login(req, res, next) {
             department: true,
             batch: true
           }
-        }
+        },
+        visitorProfile: true
       }
     });
 
@@ -73,6 +74,13 @@ export async function login(req, res, next) {
           message: 'Your account is pending institutional approval.'
         });
       }
+    }
+
+    if (user.role === 'VISITOR') {
+      return res.status(403).json({
+        success: false,
+        message: 'This portal is for Students, Staff, and Admins. Please use the Visitor Sign In option.'
+      });
     }
 
     const secret = process.env.JWT_SECRET;
@@ -143,7 +151,8 @@ export async function getMe(req, res, next) {
             department: true,
             batch: true
           }
-        }
+        },
+        visitorProfile: true
       }
     });
 
@@ -281,6 +290,144 @@ export async function resetPassword(req, res, next) {
     return res.json({
       success: true,
       message: 'Password has been reset successfully. You can now log in.'
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Visitor Authentication
+const visitorRegisterSchema = z.object({
+  fullName: z.string().min(2, 'Full name must have at least 2 characters.').trim(),
+  email: z.string().email('Please provide a valid email address.').trim().toLowerCase(),
+  password: z.string().min(6, 'Password must be at least 6 characters long.'),
+  organization: z.string().optional().nullable(),
+  purpose: z.string().optional().nullable()
+});
+
+const visitorLoginSchema = z.object({
+  email: z.string().email('Please provide a valid email address.').trim().toLowerCase(),
+  password: z.string().min(1, 'Password is required.')
+});
+
+export async function visitorRegister(req, res, next) {
+  try {
+    const { fullName, email, password, organization, purpose } = visitorRegisterSchema.parse(req.body);
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(409).json({
+        success: false,
+        message: 'An account with this email address already exists. Please sign in instead.'
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        role: 'VISITOR',
+        isInitialPassword: false,
+        visitorProfile: {
+          create: {
+            fullName,
+            organization: organization?.trim() || null,
+            purpose: purpose?.trim() || null
+          }
+        }
+      },
+      include: { visitorProfile: true }
+    });
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+    const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      secret,
+      { expiresIn }
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: 'Visitor account created successfully.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isInitialPassword: false,
+        visitorProfile: user.visitorProfile
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function visitorLogin(req, res, next) {
+  try {
+    const { email, password } = visitorLoginSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { visitorProfile: true }
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password.'
+      });
+    }
+
+    if (user.role !== 'VISITOR') {
+      return res.status(403).json({
+        success: false,
+        message: 'This login is for visitors. If you are a Student, Staff, or Admin, please use the Portal Sign In.'
+      });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password.'
+      });
+    }
+
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET environment variable is not configured');
+    }
+    const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      secret,
+      { expiresIn }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Visitor login successful.',
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        isInitialPassword: false,
+        visitorProfile: user.visitorProfile
+      }
     });
   } catch (error) {
     next(error);

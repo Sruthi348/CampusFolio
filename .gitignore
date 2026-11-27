@@ -10,6 +10,7 @@ node_modules/
 
 # Embedded PostgreSQL data directory
 server/.pgdata/
+.pgdata/
 
 # File uploads (store externally in production)
 server/uploads/images/*

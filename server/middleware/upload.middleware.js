@@ -81,3 +81,25 @@ export const uploadCSV = multer({
     }
   }
 });
+
+// Resume file upload filter (Max 10MB, PDF, DOCX in memory)
+const memoryStorage = multer.memoryStorage();
+export const uploadResume = multer({
+  storage: memoryStorage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword'
+    ];
+    const allowedExts = ['.pdf', '.docx', '.doc'];
+    const ext = path.extname(file.originalname).toLowerCase();
+
+    if (allowedMimeTypes.includes(file.mimetype) || allowedExts.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid resume format. Only PDF (.pdf) and Word (.docx) files up to 10MB are permitted.'), false);
+    }
+  }
+});
