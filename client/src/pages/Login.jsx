@@ -294,6 +294,8 @@ export function Login() {
                   rahul.sharma@...
                 </button>
               </div>
+            </div>
+
             {/* Visitor Callout */}
             <div className="mt-5 pt-4 border-t border-[#DCE3EC] text-center">
               <p className="text-xs text-[#526175]">
