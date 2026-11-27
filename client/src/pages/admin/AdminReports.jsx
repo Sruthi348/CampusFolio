@@ -43,7 +43,6 @@ export function AdminReports() {
   const departmentStats = reports?.departmentStats || [];
   const batchStats = reports?.batchStats || [];
   const topViewedStudents = reports?.topViewedStudents || [];
-  const popularSkills = reports?.popularSkills || [];
 
   return (
     <div className="max-w-5xl space-y-8">
@@ -121,34 +120,6 @@ export function AdminReports() {
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-
-      {/* Popular Skills Barometer */}
-      <div className="bg-white border border-[#E2E8F0] rounded-2xl p-6 shadow-xs space-y-4">
-        <h2 className="font-bold text-base text-[#0F172A]">Student Competency Distribution (Top Skills)</h2>
-
-        <div className="space-y-3">
-          {popularSkills.map((s) => {
-            const count = s._count?.studentSkills || 0;
-            const maxCount = Math.max(...popularSkills.map(item => item._count?.studentSkills || 1));
-            const pct = Math.round((count / maxCount) * 100);
-
-            return (
-              <div key={s.id} className="space-y-1 text-xs">
-                <div className="flex items-center justify-between font-semibold">
-                  <span className="text-slate-800">{s.name} ({s.category})</span>
-                  <span className="text-[#0D9488] font-bold">{count} Students</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-teal-600 transition-all duration-500"
-                    style={{ width: `${Math.max(5, pct)}%` }}
-                  ></div>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 
