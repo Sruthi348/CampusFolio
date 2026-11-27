@@ -90,9 +90,9 @@ export function Dashboard() {
                   Active & Verified
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full" title="Activates automatically once all documents and sections are verified by your assigned faculty tutor">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-100/70 px-2 py-0.5 rounded-full" title="Awaiting verification and publishing approval by your assigned faculty tutor">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-600"></span>
-                  Pending Verification
+                  Awaiting Staff Approval
                 </span>
               )}
             </div>
@@ -102,17 +102,27 @@ export function Dashboard() {
                 type="text"
                 readOnly
                 value={publicUrl}
-                className="w-full bg-[#FFFFFF] border border-[#DCE3EC] rounded-lg px-3 py-2 text-sm text-[#0F172A] font-mono select-all focus:outline-hidden"
+                disabled={!isPubliclyActive}
+                className={`w-full rounded-lg px-3 py-2 text-sm font-mono select-all focus:outline-hidden border ${
+                  isPubliclyActive
+                    ? 'bg-[#FFFFFF] border-[#DCE3EC] text-[#0F172A]'
+                    : 'bg-[#F4F6F9] border-[#DCE3EC] text-[#526175] opacity-75'
+                }`}
               />
               <button
                 onClick={handleCopy}
-                className="px-3.5 py-2 bg-[#142B4A] hover:bg-[#243F64] text-white text-sm font-semibold rounded-lg flex items-center gap-1.5 shrink-0 transition cursor-pointer"
-                title="Copy Link"
+                disabled={!isPubliclyActive}
+                className={`px-3.5 py-2 text-sm font-semibold rounded-lg flex items-center gap-1.5 shrink-0 transition ${
+                  isPubliclyActive
+                    ? 'bg-[#142B4A] hover:bg-[#243F64] text-white cursor-pointer'
+                    : 'bg-[#B9C9DD] text-white/80 cursor-not-allowed opacity-60'
+                }`}
+                title={isPubliclyActive ? 'Copy Public Link' : 'Copy disabled: Awaiting staff approval'}
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 {copied ? 'Copied' : 'Copy'}
               </button>
-              {studentSlug && (
+              {isPubliclyActive && studentSlug && (
                 <a
                   href={`/student/${studentSlug}`}
                   target="_blank"
@@ -127,7 +137,7 @@ export function Dashboard() {
             {!isPubliclyActive && (
               <p className="text-[11px] text-[#526175] mt-1.5 flex items-center gap-1">
                 <Clock className="w-3 h-3 text-amber-600 shrink-0" />
-                <span>Link activates automatically once your assigned tutor verifies your submissions.</span>
+                <span>Public link and sharing will be activated once your assigned faculty tutor approves publishing.</span>
               </p>
             )}
           </div>

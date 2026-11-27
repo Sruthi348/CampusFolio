@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import prisma from '../prisma/prismaClient.js';
-import { syncStudentVerificationAndPublish } from '../services/verificationGate.service.js';
+import {
+  getStudentVerificationStatus,
+  revokePublicAccessIfUnverified,
+  syncStudentVerificationAndPublish
+} from '../services/verificationGate.service.js';
 
 // Helper to retrieve the current staff member's profile
 async function getStaffProfile(userId) {
@@ -180,6 +184,7 @@ export async function getAssignedStudents(req, res, next) {
       const pendingDocs = s.documentSubmissions.filter(d => d.status === 'PENDING').length;
       const verifiedDocs = s.documentSubmissions.filter(d => d.status === 'VERIFIED').length;
       const actionNeeded = s.documentSubmissions.filter(d => d.status === 'RESUBMISSION_REQUIRED' || d.status === 'REJECTED').length;
+      const canPublish = s.status === 'ACTIVE' && pendingDocs === 0 && actionNeeded === 0;
 
       return {
         id: s.id,
@@ -196,6 +201,7 @@ export async function getAssignedStudents(req, res, next) {
         pendingDocs,
         verifiedDocs,
         actionNeeded,
+        canPublish,
         counts: s._count
       };
     });
@@ -260,7 +266,9 @@ export async function getStudentDetails(req, res, next) {
       }
     });
 
-    return res.json({ success: true, student });
+    const verificationStatus = await getStudentVerificationStatus(student.id);
+
+    return res.json({ success: true, student, verificationStatus });
   } catch (error) {
     next(error);
   }
@@ -531,8 +539,10 @@ export async function recordVerificationDecision(req, res, next) {
       return { updatedSubmission, record };
     });
 
-    // Auto-sync public portfolio activation based on staff verification gate
-    await syncStudentVerificationAndPublish(submission.studentId);
+    // If decision was rejected or requires correction, immediately revoke public access
+    if (decision === 'REJECTED' || decision === 'RESUBMISSION_REQUIRED') {
+      await revokePublicAccessIfUnverified(submission.studentId);
+    }
 
     const statusDisplay = decision === 'VERIFIED'
       ? 'Approved / Verified'
@@ -546,6 +556,99 @@ export async function recordVerificationDecision(req, res, next) {
       submission: result.updatedSubmission,
       record: result.record
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// PUT /api/staff/students/:id/publish
+export async function toggleStudentPublishStatus(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { isPublished } = req.body;
+
+    const staff = await getStaffProfile(req.user.id);
+    if (!staff) {
+      return res.status(404).json({ success: false, message: 'Staff profile not found.' });
+    }
+
+    const studentCondition = await getAuthorizedStudentCondition(staff);
+    const student = await prisma.studentProfile.findFirst({
+      where: {
+        id,
+        ...studentCondition
+      }
+    });
+
+    if (!student) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden: You are not authorized to manage publishing for this student.'
+      });
+    }
+
+    if (isPublished) {
+      const verificationStatus = await getStudentVerificationStatus(student.id);
+      if (!verificationStatus.canPublish) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot publish portfolio: ${verificationStatus.reason}`,
+          verificationStatus
+        });
+      }
+
+      await prisma.studentProfile.update({
+        where: { id: student.id },
+        data: { isPublished: true }
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          adminId: staff.id,
+          adminEmail: req.user.email,
+          action: 'STAFF_PUBLISHED_PORTFOLIO',
+          targetType: 'StudentProfile',
+          targetId: student.id,
+          details: JSON.stringify({
+            studentName: student.fullName,
+            rollNumber: student.rollNumber,
+            publishedBy: staff.fullName
+          })
+        }
+      });
+
+      return res.json({
+        success: true,
+        message: `Student portfolio for ${student.fullName} has been approved and published for public discovery.`,
+        isPublished: true
+      });
+    } else {
+      await prisma.studentProfile.update({
+        where: { id: student.id },
+        data: { isPublished: false }
+      });
+
+      await prisma.auditLog.create({
+        data: {
+          adminId: staff.id,
+          adminEmail: req.user.email,
+          action: 'STAFF_UNPUBLISHED_PORTFOLIO',
+          targetType: 'StudentProfile',
+          targetId: student.id,
+          details: JSON.stringify({
+            studentName: student.fullName,
+            rollNumber: student.rollNumber,
+            unpublishedBy: staff.fullName
+          })
+        }
+      });
+
+      return res.json({
+        success: true,
+        message: `Student portfolio for ${student.fullName} has been unpublished. Public access is now revoked.`,
+        isPublished: false
+      });
+    }
   } catch (error) {
     next(error);
   }

@@ -21,7 +21,8 @@ export async function parseResumeUpload(req, res, next) {
         projects: true,
         certifications: true,
         experience: true,
-        achievements: true
+        achievements: true,
+        extracurriculars: true
       }
     });
 
@@ -76,6 +77,7 @@ export async function importExtractedData(req, res, next) {
       experience = [],
       certifications = [],
       achievements = [],
+      extracurriculars = [],
       skills = []
     } = req.body;
 
@@ -87,6 +89,7 @@ export async function importExtractedData(req, res, next) {
       experienceAdded: 0,
       certificationsAdded: 0,
       achievementsAdded: 0,
+      extracurricularsAdded: 0,
       skillsAdded: 0
     };
 
@@ -356,6 +359,34 @@ export async function importExtractedData(req, res, next) {
                 }
               });
               summaryResults.skillsAdded++;
+            }
+          }
+        }
+      }
+
+      // 8. Extracurriculars
+      if (Array.isArray(extracurriculars)) {
+        for (const item of extracurriculars) {
+          if (item.selected && item.activityName?.trim()) {
+            const existing = await tx.extracurricular.findFirst({
+              where: {
+                studentId: studentProfile.id,
+                activityName: item.activityName.trim()
+              }
+            });
+
+            if (!existing) {
+              await tx.extracurricular.create({
+                data: {
+                  studentId: studentProfile.id,
+                  activityName: item.activityName.trim(),
+                  role: item.role?.trim() || 'Participant / Member',
+                  organization: item.organization?.trim() || null,
+                  duration: item.duration?.trim() || '1 Year',
+                  description: item.description?.trim() || item.activityName.trim()
+                }
+              });
+              summaryResults.extracurricularsAdded++;
             }
           }
         }

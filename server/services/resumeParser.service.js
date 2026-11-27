@@ -12,7 +12,7 @@ export async function extractTextFromBuffer(buffer, mimetype, filename = '') {
     await parser.load();
     const result = await parser.getText();
     const text = typeof result === 'string' ? result : (result?.text || '');
-    if (!text || text.trim().length < 15) {
+    if (!text || text.trim().length < 5) {
       throw new Error('Could not extract readable text from this PDF. It may be an image scan or password protected.');
     }
     return text.trim();
@@ -26,7 +26,7 @@ export async function extractTextFromBuffer(buffer, mimetype, filename = '') {
   ) {
     const result = await mammoth.extractRawText({ buffer });
     const text = result?.value || '';
-    if (!text || text.trim().length < 15) {
+    if (!text || text.trim().length < 5) {
       throw new Error('Could not extract readable text from this Word document.');
     }
     return text.trim();
@@ -209,7 +209,8 @@ export function extractWithRules(rawText) {
     { key: 'projects', regex: /^(?:projects|academic\s+projects|personal\s+projects|technical\s+projects|key\s+projects)\b/i },
     { key: 'skills', regex: /^(?:technical\s+skills|skills\s*(?:&|and)\s*competencies|skills|tools\s*(?:&|and)\s*technologies|areas\s+of\s+expertise)\b/i },
     { key: 'certifications', regex: /^(?:certifications?|licenses\s*(?:&|and)\s*certifications|certificates|courses)\b/i },
-    { key: 'achievements', regex: /^(?:achievements?|awards?\s*(?:&|and)\s*honors?|honors?|accomplishments?|co-curricular)\b/i }
+    { key: 'achievements', regex: /^(?:achievements?|awards?\s*(?:&|and)\s*honors?|honors?|accomplishments?|co-curricular)\b/i },
+    { key: 'extracurriculars', regex: /^(?:extracurricular(?:\s+activities)?|co-curricular(?:\s+activities)?|activities|leadership\s*(?:&|and)\s*activities)\b/i }
   ];
 
   const sections = {
@@ -219,7 +220,8 @@ export function extractWithRules(rawText) {
     projects: [],
     skills: [],
     certifications: [],
-    achievements: []
+    achievements: [],
+    extracurriculars: []
   };
 
   let currentSection = null;
@@ -325,9 +327,19 @@ export function extractWithRules(rawText) {
     const title = blockLines[0].replace(/^[-•*#\s]+/, '').split(/[-|–]/)[0].trim();
     if (!title || title.length > 60) continue;
 
-    // Technologies used
+    // Technologies used (safe escaping to avoid invalid regex quantifiers like C++)
     const foundTechs = techDictionary.filter(tech => {
-      const regex = new RegExp(`\\b${tech.replace('.', '\\.')}\\b`, 'i');
+      if (tech === 'C++') {
+        return /(?:^|\W)c\+\+(?:$|\W)/i.test(block);
+      }
+      if (tech === 'C#') {
+        return /(?:^|\W)c#(?:$|\W)/i.test(block);
+      }
+      if (tech === 'C') {
+        return /(?:^|\s|[.,;])c(?:$|\s|[.,;])/i.test(block);
+      }
+      const escaped = tech.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'i');
       return regex.test(block);
     });
 
@@ -397,7 +409,10 @@ export function extractWithRules(rawText) {
   for (const line of certLines) {
     const cleanLine = line.replace(/^[-•*#\s]+/, '').trim();
     let issuer = 'Online Certification Authority';
-    const matchedIssuer = commonIssuers.find(i => new RegExp(`\\b${i}\\b`, 'i').test(cleanLine));
+    const matchedIssuer = commonIssuers.find(i => {
+      const escaped = i.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return new RegExp(`\\b${escaped}\\b`, 'i').test(cleanLine);
+    });
     if (matchedIssuer) issuer = matchedIssuer;
 
     const urlMatch = cleanLine.match(/https?:\/\/[^\s,)]+/);
@@ -480,6 +495,22 @@ export function extractWithRules(rawText) {
     }
   }
 
+  // 9. Parse Extracurriculars
+  const extracurriculars = [];
+  const extraLines = (sections.extracurriculars || []).filter(l => l.length > 5);
+  for (const line of extraLines) {
+    const cleanLine = line.replace(/^[-•*#\s]+/, '').trim();
+    if (cleanLine.length >= 5) {
+      extracurriculars.push({
+        activityName: cleanLine.slice(0, 70),
+        role: 'Participant / Member',
+        organization: 'College / Student Body',
+        duration: '1 Year',
+        description: cleanLine
+      });
+    }
+  }
+
   return {
     basicInfo: {
       fullName,
@@ -494,6 +525,7 @@ export function extractWithRules(rawText) {
     experience,
     certifications,
     achievements,
+    extracurriculars,
     skills
   };
 }
@@ -615,9 +647,24 @@ export async function parseResume(buffer, mimetype, filename, existingProfile = 
         };
       });
     }
+    // Extracurriculars duplicate check
+    if (extracted.extracurriculars) {
+      extracted.extracurriculars = extracted.extracurriculars.map(item => {
+        const match = existingProfile.extracurriculars?.find(existing =>
+          existing.activityName?.toLowerCase().trim() === item.activityName?.toLowerCase().trim()
+        );
+        return {
+          ...item,
+          isDuplicate: Boolean(match),
+          existingId: match?.id || null,
+          duplicateNotice: match ? `Matches existing extracurricular: "${match.activityName}"` : null,
+          selected: !match
+        };
+      });
+    }
   } else {
     // Default selected to true for all items
-    ['education', 'projects', 'experience', 'certifications', 'achievements', 'skills'].forEach(key => {
+    ['education', 'projects', 'experience', 'certifications', 'achievements', 'extracurriculars', 'skills'].forEach(key => {
       if (extracted[key]) {
         extracted[key] = extracted[key].map(item => ({ ...item, selected: true, isDuplicate: false }));
       }

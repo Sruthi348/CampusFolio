@@ -9,7 +9,8 @@ import {
   getVerificationItem,
   recordVerificationDecision,
   getVerificationHistory,
-  updateStaffSettings
+  updateStaffSettings,
+  toggleStudentPublishStatus
 } from '../controllers/staff.controller.js';
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.use(requireRole('STAFF'));
 router.get('/overview', getStaffOverview);
 router.get('/students', getAssignedStudents);
 router.get('/students/:id', getStudentDetails);
+router.put('/students/:id/publish', toggleStudentPublishStatus);
 
 // Document Verification Queue & History
 router.get('/verifications', getVerificationQueue);

@@ -156,10 +156,10 @@ export async function togglePublish(req, res, next) {
     });
     if (!profile) return res.status(404).json({ success: false, message: 'Profile not found.' });
 
-    // Public portfolio link activation is governed strictly by staff verification gate
+    // Public portfolio link activation is governed strictly by assigned staff publishing approval
     return res.status(403).json({
       success: false,
-      message: 'Portfolio activation is governed by staff verification. The public portfolio link activates automatically once all submitted sections and supporting documents are verified and approved by your assigned faculty tutor.'
+      message: 'Portfolio publishing is controlled by your assigned faculty tutor. The public portfolio link can only be approved and published by your assigned faculty tutor after reviewing and verifying all your submitted documents.'
     });
   } catch (error) {
     next(error);

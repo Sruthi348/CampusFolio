@@ -107,9 +107,7 @@ export function ResumeExtract() {
     formData.append('resume', file);
 
     try {
-      const res = await api.post('/students/me/resume/extract', formData, {
-        headers: { 'Content-Type': undefined }
-      });
+      const res = await api.post('/students/me/resume/extract', formData);
 
       if (res.data.success && res.data.extracted) {
         const raw = res.data.extracted;
@@ -203,6 +201,7 @@ export function ResumeExtract() {
     experience: extractedData?.experience?.length || 0,
     certifications: extractedData?.certifications?.length || 0,
     achievements: extractedData?.achievements?.length || 0,
+    extracurriculars: extractedData?.extracurriculars?.length || 0,
     skills: extractedData?.skills?.length || 0
   };
 
@@ -212,6 +211,7 @@ export function ResumeExtract() {
     experience: extractedData?.experience?.filter(i => i.selected)?.length || 0,
     certifications: extractedData?.certifications?.filter(i => i.selected)?.length || 0,
     achievements: extractedData?.achievements?.filter(i => i.selected)?.length || 0,
+    extracurriculars: extractedData?.extracurriculars?.filter(i => i.selected)?.length || 0,
     skills: extractedData?.skills?.filter(i => i.selected)?.length || 0
   };
 
@@ -380,7 +380,7 @@ export function ResumeExtract() {
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    <span>Extract Portfolio Data</span>
+                    <span>Analyze & Extract Data</span>
                   </>
                 )}
               </button>
@@ -402,7 +402,7 @@ export function ResumeExtract() {
               </div>
               <h2 className="text-xl font-bold">Review Extracted Portfolio Details</h2>
               <p className="text-xs text-[#B9C9DD]">
-                Inspect, edit, or uncheck items you do not wish to import. Duplicate entries have been automatically flagged.
+                Inspect, edit, or uncheck items you do not wish to import. Click &quot;Save Changes&quot; to commit confirmed items to your portfolio.
               </p>
             </div>
 
@@ -414,12 +414,12 @@ export function ResumeExtract() {
               {importing ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Importing...</span>
+                  <span>Saving Changes...</span>
                 </>
               ) : (
                 <>
                   <Check className="w-4 h-4" />
-                  <span>Import Selected to Portfolio</span>
+                  <span>Save Changes</span>
                 </>
               )}
             </button>
@@ -495,6 +495,16 @@ export function ResumeExtract() {
             >
               <Trophy className="w-3.5 h-3.5" />
               Achievements ({selectedCounts.achievements}/{counts.achievements})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('extracurriculars')}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                activeTab === 'extracurriculars' ? 'bg-[#142B4A] text-white' : 'text-[#526175] hover:bg-[#F4F6F9]'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5" />
+              Extracurriculars ({selectedCounts.extracurriculars}/{counts.extracurriculars})
             </button>
           </div>
 
@@ -1089,6 +1099,85 @@ export function ResumeExtract() {
             </div>
           )}
 
+          {/* TAB 8: EXTRACURRICULARS */}
+          {activeTab === 'extracurriculars' && (
+            <div className="bg-white rounded-2xl p-6 sm:p-8 border border-[#DCE3EC] shadow-xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#DCE3EC] pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-[#0F172A]">Extracurricular Activities & Engagements</h3>
+                  <p className="text-xs text-[#526175]">Club memberships, leadership positions, and student body participation.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleAllInSection('extracurriculars', true)}
+                    className="text-xs font-semibold px-2.5 py-1 rounded bg-[#F4F6F9] hover:bg-[#E9EFF6] text-[#142B4A]"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={() => toggleAllInSection('extracurriculars', false)}
+                    className="text-xs font-semibold px-2.5 py-1 rounded bg-[#F4F6F9] hover:bg-[#E9EFF6] text-[#526175]"
+                  >
+                    Deselect All
+                  </button>
+                </div>
+              </div>
+
+              {counts.extracurriculars === 0 ? (
+                <div className="p-8 text-center border-2 border-dashed border-[#DCE3EC] rounded-xl text-xs text-[#526175]">
+                  No extracurricular activities detected in this resume document.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {extractedData.extracurriculars?.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-xl border transition-all ${
+                        item.selected
+                          ? 'border-[#142B4A] bg-[#E9EFF6]/20'
+                          : 'border-[#DCE3EC] bg-white opacity-60'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(item.selected)}
+                            onChange={() => toggleItemSelection('extracurriculars', idx)}
+                            className="mt-1 rounded border-[#B9C9DD] text-[#142B4A]"
+                          />
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-sm text-[#0F172A]">{item.activityName}</span>
+                              <span className="text-xs font-semibold text-[#142B4A] px-2 py-0.5 rounded bg-[#E9EFF6]">
+                                {item.role}
+                              </span>
+                              {item.isDuplicate && (
+                                <span className="text-2xs font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  {item.duplicateNotice || 'Duplicate'}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-[#526175]">{item.description}</p>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => removeItem('extracurriculars', idx)}
+                          className="text-[#526175] hover:text-red-600 p-1 rounded-md"
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Bottom Action Footer */}
           <div className="bg-white rounded-2xl p-6 border border-[#DCE3EC] shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-xs text-[#526175]">
@@ -1110,12 +1199,12 @@ export function ResumeExtract() {
                 {importing ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Saving to Database...</span>
+                    <span>Saving Changes...</span>
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    <span>Import Selected to Portfolio</span>
+                    <span>Save Changes</span>
                   </>
                 )}
               </button>

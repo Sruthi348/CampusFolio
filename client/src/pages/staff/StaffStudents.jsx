@@ -136,17 +136,28 @@ export function StaffStudents() {
                     </div>
                   </div>
 
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
-                      student.status === 'ACTIVE'
-                        ? 'bg-[#EBF7EE] text-[#166534] border-[#86EFAC]'
-                        : student.status === 'SUSPENDED'
-                        ? 'bg-[#FDF0F0] text-[#A82222] border-[#FCA5A5]'
-                        : 'bg-[#F4F6F9] text-[#526175] border-[#DCE3EC]'
-                    }`}
-                  >
-                    {student.status}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
+                        student.status === 'ACTIVE'
+                          ? 'bg-[#EBF7EE] text-[#166534] border-[#86EFAC]'
+                          : student.status === 'SUSPENDED'
+                          ? 'bg-[#FDF0F0] text-[#A82222] border-[#FCA5A5]'
+                          : 'bg-[#F4F6F9] text-[#526175] border-[#DCE3EC]'
+                      }`}
+                    >
+                      {student.status}
+                    </span>
+                    {student.isPublished ? (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#EBF7EE] text-[#166534] border border-[#86EFAC]">
+                        Published
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-[#F4F6F9] text-[#526175] border border-[#DCE3EC]">
+                        Unpublished
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="text-xs text-[#526175] space-y-1 mb-4 bg-[#F4F6F9] p-3 rounded-lg border border-[#DCE3EC]">
@@ -182,7 +193,7 @@ export function StaffStudents() {
               </div>
 
               <div className="pt-3 border-t border-[#DCE3EC] flex items-center justify-between">
-                {student.slug && (
+                {student.isPublished && student.slug ? (
                   <Link
                     to={`/student/${student.slug}`}
                     target="_blank"
@@ -192,12 +203,16 @@ export function StaffStudents() {
                     <ExternalLink className="w-3 h-3" />
                     Public View
                   </Link>
+                ) : (
+                  <span className="text-xs text-[#526175] italic">
+                    Unpublished
+                  </span>
                 )}
                 <Link
                   to={`/staff/students/${student.id}`}
                   className="inline-flex items-center gap-1 text-xs font-semibold text-[#142B4A] hover:text-[#243F64] group-hover:translate-x-0.5 transition"
                 >
-                  Inspect Portfolio <ChevronRight className="w-3.5 h-3.5" />
+                  Inspect & Publish <ChevronRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
             </div>

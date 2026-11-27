@@ -1,13 +1,19 @@
 import prisma from '../prisma/prismaClient.js';
 
 /**
- * Checks whether all required sections and supporting documents for a student
- * have been verified and approved by the assigned staff member.
+ * Evaluates whether all required sections and supporting documents for a student
+ * have been verified and approved by the assigned faculty tutor.
  *
- * If all submissions are verified, automatically activates (publishes) the portfolio.
- * If any submission is pending, rejected, or requires correction, deactivates (unpublishes) it.
+ * Requirements for Staff Publishing Approval:
+ * 1. Student account must be ACTIVE (not suspended).
+ * 2. Every submitted supporting document must be marked 'VERIFIED'.
+ * 3. Every certification and achievement must be marked 'VERIFIED'.
+ * 4. Zero items in PENDING, RESUBMISSION_REQUIRED, or REJECTED state.
+ *
+ * NOTE: Completed verification is a prerequisite, but the public portfolio
+ * remains UNPUBLISHED until the assigned staff tutor explicitly approves publication.
  */
-export async function syncStudentVerificationAndPublish(studentId, db = prisma) {
+export async function getStudentVerificationStatus(studentId, db = prisma) {
   const profile = await db.studentProfile.findUnique({
     where: { id: studentId },
     include: {
@@ -17,42 +23,106 @@ export async function syncStudentVerificationAndPublish(studentId, db = prisma) 
     }
   });
 
-  if (!profile) return false;
+  if (!profile) {
+    return {
+      canPublish: false,
+      isPublished: false,
+      reason: 'Student profile not found.'
+    };
+  }
 
   const docs = profile.documentSubmissions || [];
   const certs = profile.certifications || [];
   const achs = profile.achievements || [];
 
-  // Check for any pending or rejected submissions
-  const hasPendingDocs = docs.some(d => d.status === 'PENDING' || d.status === 'RESUBMISSION_REQUIRED');
-  const hasRejectedDocs = docs.some(d => d.status === 'REJECTED');
+  const pendingDocs = docs.filter(d => d.status === 'PENDING' || d.status === 'RESUBMISSION_REQUIRED');
+  const rejectedDocs = docs.filter(d => d.status === 'REJECTED');
+  const verifiedDocs = docs.filter(d => d.status === 'VERIFIED');
 
-  const hasPendingCerts = certs.some(c => c.verificationStatus === 'PENDING' || c.verificationStatus === 'RESUBMISSION_REQUIRED');
-  const hasRejectedCerts = certs.some(c => c.verificationStatus === 'REJECTED');
+  const pendingCerts = certs.filter(c => c.verificationStatus === 'PENDING' || c.verificationStatus === 'RESUBMISSION_REQUIRED');
+  const rejectedCerts = certs.filter(c => c.verificationStatus === 'REJECTED');
+  const verifiedCerts = certs.filter(c => c.verificationStatus === 'VERIFIED');
 
-  const hasPendingAchs = achs.some(a => a.verificationStatus === 'PENDING' || a.verificationStatus === 'RESUBMISSION_REQUIRED');
-  const hasRejectedAchs = achs.some(a => a.verificationStatus === 'REJECTED');
+  const pendingAchs = achs.filter(a => a.verificationStatus === 'PENDING' || a.verificationStatus === 'RESUBMISSION_REQUIRED');
+  const rejectedAchs = achs.filter(a => a.verificationStatus === 'REJECTED');
+  const verifiedAchs = achs.filter(a => a.verificationStatus === 'VERIFIED');
 
-  const hasUnverifiedItems = hasPendingDocs || hasRejectedDocs || hasPendingCerts || hasRejectedCerts || hasPendingAchs || hasRejectedAchs;
+  const pendingCount = pendingDocs.length + pendingCerts.length + pendingAchs.length;
+  const rejectedCount = rejectedDocs.length + rejectedCerts.length + rejectedAchs.length;
+  const verifiedCount = verifiedDocs.length + verifiedCerts.length + verifiedAchs.length;
+  const totalCount = docs.length + certs.length + achs.length;
 
-  // A portfolio is verified if:
-  // 1. It has NO pending or rejected documents or credentials
-  // 2. The student profile is approved by staff/admin
-  // 3. Status is not suspended
-  // 4. If any documents were submitted, all submitted documents and credentials must be VERIFIED
-  const hasSubmissions = docs.length > 0 || certs.length > 0 || achs.length > 0;
-  const allSubmissionsVerified = hasSubmissions
-    ? (docs.every(d => d.status === 'VERIFIED') && certs.every(c => c.verificationStatus === 'VERIFIED') && achs.every(a => a.verificationStatus === 'VERIFIED'))
-    : profile.isApproved;
-
-  const shouldBePublished = !hasUnverifiedItems && allSubmissionsVerified && profile.isApproved && profile.status !== 'SUSPENDED';
-
-  if (profile.isPublished !== shouldBePublished) {
-    await db.studentProfile.update({
-      where: { id: studentId },
-      data: { isPublished: shouldBePublished }
-    });
+  if (profile.status === 'SUSPENDED') {
+    return {
+      canPublish: false,
+      isPublished: profile.isPublished,
+      pendingCount,
+      rejectedCount,
+      verifiedCount,
+      totalCount,
+      reason: 'Student account is suspended.'
+    };
   }
 
-  return shouldBePublished;
+  if (pendingCount > 0) {
+    return {
+      canPublish: false,
+      isPublished: profile.isPublished,
+      pendingCount,
+      rejectedCount,
+      verifiedCount,
+      totalCount,
+      reason: `${pendingCount} item(s) are awaiting faculty verification.`
+    };
+  }
+
+  if (rejectedCount > 0) {
+    return {
+      canPublish: false,
+      isPublished: profile.isPublished,
+      pendingCount,
+      rejectedCount,
+      verifiedCount,
+      totalCount,
+      reason: `${rejectedCount} item(s) have been rejected or require student resubmission.`
+    };
+  }
+
+  return {
+    canPublish: true,
+    isPublished: profile.isPublished,
+    pendingCount: 0,
+    rejectedCount: 0,
+    verifiedCount,
+    totalCount,
+    reason: 'All submitted documents and portfolio items have been verified and approved.'
+  };
+}
+
+/**
+ * If a student makes updates, submits new documents, or has rejected items,
+ * and their portfolio was previously published, automatically revoke public access
+ * so unverified content is never publicly visible.
+ */
+export async function revokePublicAccessIfUnverified(studentId, db = prisma) {
+  const status = await getStudentVerificationStatus(studentId, db);
+  if (!status.canPublish) {
+    // If it was published, revoke it
+    if (status.isPublished) {
+      await db.studentProfile.update({
+        where: { id: studentId },
+        data: { isPublished: false }
+      });
+      return { revoked: true, reason: status.reason };
+    }
+  }
+  return { revoked: false };
+}
+
+/**
+ * Compatibility wrapper. Only revokes if unverified; does NOT automatically publish.
+ */
+export async function syncStudentVerificationAndPublish(studentId, db = prisma) {
+  const res = await revokePublicAccessIfUnverified(studentId, db);
+  return !res.revoked;
 }

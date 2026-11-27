@@ -33,6 +33,10 @@ export function StaffStudentView() {
   const [actionError, setActionError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
+  // Publishing approval state
+  const [publishing, setPublishing] = useState(false);
+  const [publishMessage, setPublishMessage] = useState({ type: '', text: '' });
+
   const fetchStudent = async () => {
     setLoading(true);
     setError('');
@@ -97,6 +101,25 @@ export function StaffStudentView() {
     }
   };
 
+  const handleTogglePublish = async (nextStatus) => {
+    setPublishing(true);
+    setPublishMessage({ type: '', text: '' });
+    try {
+      const res = await api.put(`/staff/students/${id}/publish`, { isPublished: nextStatus });
+      if (res.data.success) {
+        setStudent(prev => ({ ...prev, isPublished: res.data.isPublished }));
+        setPublishMessage({ type: 'success', text: res.data.message });
+      }
+    } catch (err) {
+      setPublishMessage({
+        type: 'error',
+        text: err.response?.data?.message || 'Failed to update publishing status.'
+      });
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -122,6 +145,13 @@ export function StaffStudentView() {
   }
 
   const documents = student.documentSubmissions || [];
+  const pendingDocsCount = documents.filter(d => d.status === 'PENDING' || d.status === 'RESUBMISSION_REQUIRED').length;
+  const rejectedDocsCount = documents.filter(d => d.status === 'REJECTED').length;
+  const verifiedDocsCount = documents.filter(d => d.status === 'VERIFIED').length;
+  const allVerified = documents.length > 0
+    ? (pendingDocsCount === 0 && rejectedDocsCount === 0)
+    : student.isApproved;
+  const canPublish = allVerified && student.status === 'ACTIVE';
 
   return (
     <div className="space-y-6">
@@ -134,7 +164,7 @@ export function StaffStudentView() {
           <ArrowLeft className="w-4 h-4" /> Back to Students Roster
         </Link>
 
-        {student.slug && (
+        {student.isPublished && student.slug ? (
           <Link
             to={`/student/${student.slug}`}
             target="_blank"
@@ -144,6 +174,11 @@ export function StaffStudentView() {
             <ExternalLink className="w-3.5 h-3.5" />
             View Public Showcase
           </Link>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-800">
+            <Clock className="w-3.5 h-3.5 text-amber-600" />
+            Public Showcase Offline (Unpublished)
+          </span>
         )}
       </div>
 
@@ -160,6 +195,17 @@ export function StaffStudentView() {
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EBF7EE] text-[#166534] border border-[#86EFAC]">
                   {student.status}
                 </span>
+                {student.isPublished ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EBF7EE] text-[#166534] border border-[#86EFAC] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>
+                    Published & Active
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FEF7EA] text-[#9A5B0B] border border-[#FDE68A] flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#9A5B0B]"></span>
+                    Unpublished / Private
+                  </span>
+                )}
               </div>
               <p className="text-xs text-[#526175] font-mono mt-0.5">
                 Roll: {student.rollNumber} • Email: {student.user?.email}
@@ -174,6 +220,72 @@ export function StaffStudentView() {
         {student.bio && (
           <div className="mt-4 pt-4 border-t border-[#DCE3EC] text-xs text-[#526175] leading-relaxed bg-[#F4F6F9] p-3 rounded-lg">
             {student.bio}
+          </div>
+        )}
+      </div>
+
+      {/* Staff Publishing & Public Activation Control Card */}
+      <div className="bg-white rounded-xl border border-[#DCE3EC] shadow-xs p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#526175]">
+                Tutor Publishing Control & Public Discovery Gate
+              </span>
+              {student.isPublished ? (
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#EBF7EE] text-[#166534] border border-[#86EFAC]">
+                  Active on Public Portal
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-[#FEF7EA] text-[#9A5B0B] border border-[#FDE68A]">
+                  Public Access Disabled
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-[#526175] max-w-xl">
+              {student.isPublished
+                ? `This portfolio is currently published and discoverable at https://campusfolio/student/${student.slug}`
+                : canPublish
+                ? 'All submitted documents and credentials have been verified and approved. As the assigned tutor, you may now approve and publish this portfolio.'
+                : `Verification prerequisite pending: ${pendingDocsCount} pending and ${rejectedDocsCount} rejected item(s). Every submitted document and section must be verified before publishing.`
+              }
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {student.isPublished ? (
+              <button
+                onClick={() => handleTogglePublish(false)}
+                disabled={publishing}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#FDF0F0] text-[#A82222] border border-[#FCA5A5] hover:bg-[#FCA5A5]/30 transition cursor-pointer disabled:opacity-50"
+              >
+                {publishing ? 'Updating...' : 'Unpublish Portfolio'}
+              </button>
+            ) : (
+              <button
+                onClick={() => handleTogglePublish(true)}
+                disabled={!canPublish || publishing}
+                className={`px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition ${
+                  canPublish
+                    ? 'bg-[#142B4A] hover:bg-[#243F64] text-white cursor-pointer shadow-xs'
+                    : 'bg-[#E2E8F0] text-[#526175] cursor-not-allowed opacity-60'
+                }`}
+                title={canPublish ? 'Approve & Publish Portfolio' : 'Cannot publish: Verify all submitted items first'}
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{publishing ? 'Publishing...' : 'Publish Portfolio'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {publishMessage.text && (
+          <div className={`mt-3 p-2.5 rounded-lg text-xs font-semibold border ${
+            publishMessage.type === 'success'
+              ? 'bg-[#EBF7EE] text-[#166534] border-[#86EFAC]'
+              : 'bg-[#FDF0F0] text-[#A82222] border-[#FCA5A5]'
+          }`}>
+            {publishMessage.text}
           </div>
         )}
       </div>
