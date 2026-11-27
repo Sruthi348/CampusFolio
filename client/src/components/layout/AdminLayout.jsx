@@ -34,15 +34,12 @@ export function AdminLayout() {
   };
 
   const navItems = [
-    { name: 'Overview', to: '/admin', icon: LayoutDashboard, end: true },
     { name: 'Students Management', to: '/admin/students', icon: Users },
     { name: 'Add Student / CSV Import', to: '/admin/add-student', icon: UserPlus },
     { name: 'Staff & Class Assignments', to: '/admin/staff', icon: UserCheck },
     { name: 'Departments & Batches', to: '/admin/departments', icon: BookOpen },
-    { name: 'Verification Logs', to: '/admin/verification-logs', icon: ClipboardList },
     { name: 'Credentials & Passwords', to: '/admin/credentials', icon: KeyRound },
     { name: 'Institutional Reports', to: '/admin/reports', icon: BarChart3 },
-    { name: 'Audit Logs', to: '/admin/audit-logs', icon: FileText },
     { name: 'System Settings', to: '/admin/settings', icon: Settings }
   ];
 
@@ -101,20 +98,6 @@ export function AdminLayout() {
             >
               <X className="w-5 h-5" />
             </button>
-          </div>
-
-          {/* Quick link to public directory */}
-          <div className="px-3 pt-3 pb-1">
-            <Link
-              to="/search"
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#B9C9DD] hover:text-white hover:bg-[#243F64]/50 transition"
-            >
-              <span className="flex items-center gap-2">
-                <Compass className="w-4 h-4" />
-                Explore Public Portal
-              </span>
-              <ChevronRight className="w-4 h-4 opacity-60" />
-            </Link>
           </div>
 
           {/* Navigation Links */}

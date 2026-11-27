@@ -39,11 +39,11 @@ export function Login() {
     try {
       const user = await login(email, password);
       if (user.role === 'ADMIN') {
-        navigate('/admin');
+        navigate('/admin/students');
       } else if (user.role === 'STAFF') {
         navigate('/staff');
       } else {
-        navigate(from === '/' || from.startsWith('/admin') || from.startsWith('/staff') ? '/dashboard' : from);
+        navigate(from === '/' || from.startsWith('/admin') || from.startsWith('/staff') ? '/dashboard/profile' : from);
       }
     } catch (err) {
       setError(err.response?.data?.message || err.message || 'Authentication failed. Please verify credentials.');

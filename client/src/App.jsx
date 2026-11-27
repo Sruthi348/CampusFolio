@@ -95,7 +95,7 @@ export function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<Dashboard />} />
+            <Route index element={<Navigate to="profile" replace />} />
             <Route path="profile" element={<ProfileEdit />} />
             <Route path="education" element={<EducationEdit />} />
             <Route path="skills" element={<SkillsEdit />} />
@@ -139,16 +139,14 @@ export function App() {
               </ProtectedRoute>
             }
           >
-            <Route index element={<AdminOverview />} />
+            <Route index element={<Navigate to="students" replace />} />
             <Route path="students" element={<AdminStudents />} />
             <Route path="add-student" element={<AdminAddStudent />} />
             <Route path="staff" element={<AdminStaff />} />
             <Route path="credentials" element={<AdminCredentials />} />
-            <Route path="verification-logs" element={<AdminVerificationLogs />} />
             <Route path="projects" element={<AdminProjects />} />
             <Route path="departments" element={<AdminDepartments />} />
             <Route path="reports" element={<AdminReports />} />
-            <Route path="audit-logs" element={<AdminAuditLog />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 

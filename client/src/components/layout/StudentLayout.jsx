@@ -55,7 +55,6 @@ export function StudentLayout() {
   const slug = profile?.slug;
 
   const navItems = [
-    { name: 'Overview', to: '/dashboard', icon: LayoutDashboard, end: true },
     { name: 'My Profile', to: '/dashboard/profile', icon: User },
     { name: 'Education', to: '/dashboard/education', icon: GraduationCap },
     { name: 'Skills & Interests', to: '/dashboard/skills', icon: Sparkles },
@@ -135,20 +134,6 @@ export function StudentLayout() {
             >
               <X className="w-5 h-5" />
             </button>
-          </div>
-
-          {/* Quick link to public directory */}
-          <div className="px-3 pt-3 pb-1">
-            <Link
-              to="/search"
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-[#B9C9DD] hover:text-white hover:bg-[#243F64]/50 transition"
-            >
-              <span className="flex items-center gap-2">
-                <Compass className="w-4 h-4" />
-                Explore Portfolios
-              </span>
-              <ChevronRight className="w-4 h-4 opacity-60" />
-            </Link>
           </div>
 
           {/* Navigation Links */}
