@@ -83,13 +83,21 @@ export function Login() {
             </div>
           </Link>
 
-          <Link
-            to="/"
-            className="hidden sm:inline-flex items-center gap-2 text-sm font-semibold text-[#B9C9DD] hover:text-white transition-colors px-3.5 py-2 rounded-lg border border-[#B9C9DD]/20 hover:border-[#B9C9DD]/40 bg-[#243F64]/30"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </Link>
+          <div className="flex items-center gap-2.5">
+            <Link
+              to="/visitor-login"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E9EFF6] hover:text-white transition-colors px-3 py-1.5 rounded-lg border border-[#B9C9DD]/30 hover:border-[#B9C9DD]/50 bg-[#243F64]/50"
+            >
+              Visitor Sign In
+            </Link>
+            <Link
+              to="/"
+              className="hidden sm:inline-flex items-center gap-2 text-xs font-semibold text-[#B9C9DD] hover:text-white transition-colors px-3 py-1.5 rounded-lg border border-[#B9C9DD]/20 hover:border-[#B9C9DD]/40 bg-[#243F64]/30"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Back to Home
+            </Link>
+          </div>
         </div>
 
         {/* Abstract Portfolio Composition */}
@@ -286,6 +294,17 @@ export function Login() {
                   rahul.sharma@...
                 </button>
               </div>
+            {/* Visitor Callout */}
+            <div className="mt-5 pt-4 border-t border-[#DCE3EC] text-center">
+              <p className="text-xs text-[#526175]">
+                Recruiter, guest, or external visitor?{' '}
+                <Link
+                  to="/visitor-login"
+                  className="font-bold text-[#142B4A] hover:text-[#243F64] hover:underline"
+                >
+                  Visitor Sign In & Register &rarr;
+                </Link>
+              </p>
             </div>
 
           </div>

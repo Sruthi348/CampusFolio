@@ -31,13 +31,21 @@ export function Home() {
             </div>
           </div>
 
-          {/* Right side of header: Sign In button */}
-          <Link
-            to="/login"
-            className="inline-flex items-center justify-center px-5 sm:px-6 py-2.5 rounded-xl bg-[#142B4A] hover:bg-[#243F64] text-white text-sm sm:text-base font-semibold shadow-xs hover:shadow-md transition-all duration-150 cursor-pointer"
-          >
-            Sign In
-          </Link>
+          {/* Right side of header: Visitor Sign In and Sign In buttons */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <Link
+              to="/visitor-login"
+              className="inline-flex items-center justify-center px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-[#142B4A] text-[#142B4A] hover:bg-[#E9EFF6] text-xs sm:text-sm font-semibold transition-all duration-150 cursor-pointer"
+            >
+              Visitor Sign In
+            </Link>
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl bg-[#142B4A] hover:bg-[#243F64] text-white text-xs sm:text-sm font-semibold shadow-xs hover:shadow-md transition-all duration-150 cursor-pointer"
+            >
+              Sign In
+            </Link>
+          </div>
         </div>
       </header>
 
