@@ -142,7 +142,7 @@ export function VisitorLogin() {
               Explore Verified Student Talent & Projects.
             </h1>
             <p className="text-base text-[#B9C9DD] leading-relaxed">
-              Create an account or sign in as an external visitor, industry recruiter, or partner to bookmark, discover, and review accredited student achievements.
+              Create an account or log in as an external visitor, industry recruiter, or partner to bookmark, discover, and review accredited student achievements.
             </p>
           </div>
 
@@ -188,7 +188,7 @@ export function VisitorLogin() {
                   : 'text-[#526175] hover:text-[#0F172A]'
               }`}
             >
-              Visitor Sign In
+              Visitor Log In
             </button>
             <button
               type="button"
@@ -209,7 +209,7 @@ export function VisitorLogin() {
             </h2>
             <p className="text-xs sm:text-sm text-[#526175] mt-1.5">
               {mode === 'login'
-                ? 'Sign in with your email and password to access discovery features.'
+                ? 'Log in with your email and password to access discovery features.'
                 : 'Fill in your details below to set up your visitor profile.'}
             </p>
           </div>
@@ -279,7 +279,7 @@ export function VisitorLogin() {
                 disabled={submitting}
                 className="w-full mt-2 py-3 px-4 rounded-xl font-semibold text-sm bg-[#142B4A] text-white hover:bg-[#243F64] disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
-                <span>{submitting ? 'Authenticating...' : 'Sign In as Visitor'}</span>
+                <span>{submitting ? 'Authenticating...' : 'Log In as Visitor'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -398,7 +398,7 @@ export function VisitorLogin() {
               to="/login"
               className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#142B4A] hover:underline"
             >
-              <span>Go to Institutional Portal Sign In</span>
+              <span>Go to Institutional Portal Log In</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

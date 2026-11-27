@@ -88,7 +88,7 @@ export function Login() {
               to="/visitor-login"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E9EFF6] hover:text-white transition-colors px-3 py-1.5 rounded-lg border border-[#B9C9DD]/30 hover:border-[#B9C9DD]/50 bg-[#243F64]/50"
             >
-              Visitor Sign In
+              Visitor Log In
             </Link>
             <Link
               to="/"
@@ -172,7 +172,7 @@ export function Login() {
             
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight">
-                Sign in to your account
+                Log in to your account
               </h2>
               <p className="text-sm text-[#526175] mt-1.5">
                 Enter your institutional credentials to access your dashboard
@@ -243,10 +243,10 @@ export function Login() {
                 className="w-full mt-2 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#142B4A] hover:bg-[#243F64] text-white text-sm font-bold uppercase tracking-wider transition-all duration-150 shadow-xs cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {submitting ? (
-                  <span>Signing in...</span>
+                  <span>Logging in...</span>
                 ) : (
                   <>
-                    <span>Sign In</span>
+                    <span>Log In</span>
                     <ArrowRight className="w-4.5 h-4.5" />
                   </>
                 )}
@@ -303,7 +303,7 @@ export function Login() {
                   to="/visitor-login"
                   className="font-bold text-[#142B4A] hover:text-[#243F64] hover:underline"
                 >
-                  Visitor Sign In & Register &rarr;
+                  Visitor Log In & Register &rarr;
                 </Link>
               </p>
             </div>

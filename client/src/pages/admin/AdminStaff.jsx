@@ -499,7 +499,7 @@ export function AdminStaff() {
                     className="w-full p-2.5 rounded-lg border border-[#DCE3EC] bg-[#F4F6F9] focus:outline-hidden focus:border-[#142B4A] focus:bg-white text-[#0F172A] transition-colors"
                   />
                   <span className="text-xs text-[#526175]">
-                    The staff member will be required to change their password upon first sign in.
+                    The staff member will be required to change their password upon first log in.
                   </span>
                 </div>
 

@@ -174,13 +174,13 @@ export function Navbar() {
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-semibold border border-[#DCE3EC] text-[#142B4A] hover:bg-[#F4F6F9] transition-colors"
                 >
                   <UserCheck className="w-4 h-4 text-[#243F64]" />
-                  <span>Visitor Sign In</span>
+                  <span>Visitor Log In</span>
                 </Link>
                 <Link
                   to="/login"
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-[#142B4A] text-white hover:bg-[#243F64] shadow-xs transition-colors"
                 >
-                  <span>Portal Sign In</span>
+                  <span>Portal Log In</span>
                   <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
@@ -290,14 +290,14 @@ export function Navbar() {
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold border border-[#DCE3EC] text-[#142B4A] hover:bg-[#F4F6F9]"
                 >
                   <UserCheck className="w-4 h-4" />
-                  Visitor Sign In
+                  Visitor Log In
                 </Link>
                 <Link
                   to="/login"
                   onClick={() => setMobileMenuOpen(false)}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold bg-[#142B4A] text-white"
                 >
-                  Portal Sign In
+                  Portal Log In
                 </Link>
               </div>
             )}
