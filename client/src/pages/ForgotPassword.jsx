@@ -284,7 +284,7 @@ export function ForgotPassword() {
                 to="/login"
                 className="w-full inline-flex items-center justify-center px-6 py-3 rounded-xl bg-[#142B4A] hover:bg-[#243F64] text-white text-sm font-bold uppercase tracking-wider transition shadow-xs"
               >
-                Proceed to Log In
+                Proceed to Login
               </Link>
             </div>
           )}
@@ -295,7 +295,7 @@ export function ForgotPassword() {
               className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#526175] hover:text-[#142B4A] transition"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Log In
+              Back to Login
             </Link>
           </div>
 

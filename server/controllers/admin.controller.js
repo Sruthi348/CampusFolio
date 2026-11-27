@@ -906,6 +906,23 @@ export async function addStaff(req, res, next) {
     const email = data.email.toLowerCase().trim();
     const staffId = data.staffId.trim().toUpperCase();
 
+    // Validate that batch belongs to the selected department
+    if (data.batchId) {
+      if (!data.departmentId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Department is required when assigning a batch.'
+        });
+      }
+      const batch = await prisma.batch.findUnique({ where: { id: data.batchId } });
+      if (!batch || batch.departmentId !== data.departmentId) {
+        return res.status(400).json({
+          success: false,
+          message: 'The selected batch does not belong to the selected department.'
+        });
+      }
+    }
+
     const existing = await prisma.user.findFirst({
       where: {
         OR: [
@@ -952,6 +969,27 @@ export async function addStaff(req, res, next) {
         }
       });
 
+      // Synchronize persistent StaffStudentAssignment for students matching BOTH department and batch
+      if (data.departmentId && data.batchId) {
+        const matchingStudents = await tx.studentProfile.findMany({
+          where: {
+            departmentId: data.departmentId,
+            batchId: data.batchId
+          },
+          select: { id: true }
+        });
+
+        if (matchingStudents.length > 0) {
+          await tx.staffStudentAssignment.createMany({
+            data: matchingStudents.map(s => ({
+              staffProfileId: staff.id,
+              studentId: s.id
+            })),
+            skipDuplicates: true
+          });
+        }
+      }
+
       return { user, staff };
     });
 
@@ -986,19 +1024,74 @@ export async function updateStaff(req, res, next) {
       return res.status(404).json({ success: false, message: 'Staff profile not found.' });
     }
 
-    const updated = await prisma.staffProfile.update({
-      where: { id },
-      data: {
-        ...(fullName ? { fullName: fullName.trim() } : {}),
-        ...(designation ? { designation: designation.trim() } : {}),
-        ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
-        ...(departmentId !== undefined ? { departmentId: departmentId || null } : {}),
-        ...(batchId !== undefined ? { batchId: batchId || null } : {})
-      },
-      include: {
-        department: true,
-        batch: true
+    const targetDeptId = departmentId !== undefined ? (departmentId || null) : existing.departmentId;
+    const targetBatchId = batchId !== undefined ? (batchId || null) : existing.batchId;
+
+    if (targetBatchId) {
+      if (!targetDeptId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Department is required when assigning a batch.'
+        });
       }
+      const batch = await prisma.batch.findUnique({ where: { id: targetBatchId } });
+      if (!batch || batch.departmentId !== targetDeptId) {
+        return res.status(400).json({
+          success: false,
+          message: 'The selected batch does not belong to the selected department.'
+        });
+      }
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const staff = await tx.staffProfile.update({
+        where: { id },
+        data: {
+          ...(fullName ? { fullName: fullName.trim() } : {}),
+          ...(designation ? { designation: designation.trim() } : {}),
+          ...(phone !== undefined ? { phone: phone ? phone.trim() : null } : {}),
+          ...(departmentId !== undefined ? { departmentId: departmentId || null } : {}),
+          ...(batchId !== undefined ? { batchId: batchId || null } : {})
+        },
+        include: {
+          department: true,
+          batch: true
+        }
+      });
+
+      // If department or batch assignment was modified, synchronize persistent StaffStudentAssignment
+      const deptChanged = departmentId !== undefined && departmentId !== existing.departmentId;
+      const batchChanged = batchId !== undefined && batchId !== existing.batchId;
+
+      if (deptChanged || batchChanged) {
+        // Clear old assignments
+        await tx.staffStudentAssignment.deleteMany({
+          where: { staffProfileId: id }
+        });
+
+        // Re-assign students matching BOTH the selected department and selected batch
+        if (targetDeptId && targetBatchId) {
+          const matchingStudents = await tx.studentProfile.findMany({
+            where: {
+              departmentId: targetDeptId,
+              batchId: targetBatchId
+            },
+            select: { id: true }
+          });
+
+          if (matchingStudents.length > 0) {
+            await tx.staffStudentAssignment.createMany({
+              data: matchingStudents.map(s => ({
+                staffProfileId: id,
+                studentId: s.id
+              })),
+              skipDuplicates: true
+            });
+          }
+        }
+      }
+
+      return staff;
     });
 
     await logAdminAction(prisma, {
@@ -1028,6 +1121,44 @@ export async function assignStudentsToStaff(req, res, next) {
 
     const staff = await prisma.staffProfile.findUnique({ where: { id } });
     if (!staff) return res.status(404).json({ success: false, message: 'Staff profile not found.' });
+
+    // Validate that all studentIds strictly belong to the staff member's assigned department and batch
+    if (staff.departmentId && staff.batchId) {
+      const outsideStudents = await prisma.studentProfile.findMany({
+        where: {
+          id: { in: studentIds },
+          NOT: {
+            departmentId: staff.departmentId,
+            batchId: staff.batchId
+          }
+        },
+        select: { id: true, fullName: true, rollNumber: true }
+      });
+
+      if (outsideStudents.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: `Cannot assign students outside the staff member's assigned department and batch (${outsideStudents.length} student(s) do not match).`
+        });
+      }
+    } else if (staff.departmentId) {
+      const outsideStudents = await prisma.studentProfile.findMany({
+        where: {
+          id: { in: studentIds },
+          NOT: {
+            departmentId: staff.departmentId
+          }
+        },
+        select: { id: true }
+      });
+
+      if (outsideStudents.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot assign students outside the staff member\'s assigned department.'
+        });
+      }
+    }
 
     let createdCount = 0;
     for (const studentId of studentIds) {

@@ -188,7 +188,7 @@ export function VisitorLogin() {
                   : 'text-[#526175] hover:text-[#0F172A]'
               }`}
             >
-              Visitor Log In
+              Visitor Login
             </button>
             <button
               type="button"
@@ -279,7 +279,7 @@ export function VisitorLogin() {
                 disabled={submitting}
                 className="w-full mt-2 py-3 px-4 rounded-xl font-semibold text-sm bg-[#142B4A] text-white hover:bg-[#243F64] disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-xs cursor-pointer"
               >
-                <span>{submitting ? 'Authenticating...' : 'Log In as Visitor'}</span>
+                <span>{submitting ? 'Authenticating...' : 'Login as Visitor'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
@@ -398,7 +398,7 @@ export function VisitorLogin() {
               to="/login"
               className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#142B4A] hover:underline"
             >
-              <span>Go to Institutional Portal Log In</span>
+              <span>Go to Institutional Portal Login</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>

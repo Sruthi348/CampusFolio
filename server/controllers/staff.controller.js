@@ -22,28 +22,35 @@ async function getStaffProfile(userId) {
 
 // Helper to determine the student query condition based on staff assignments
 async function getAuthorizedStudentCondition(staffProfile) {
+  // 1. Strict Department + Batch Rule:
+  // If the staff member is assigned to a department and batch, they MUST receive ONLY students
+  // who belong to BOTH that exact department and that exact batch.
+  if (staffProfile.departmentId && staffProfile.batchId) {
+    return {
+      departmentId: staffProfile.departmentId,
+      batchId: staffProfile.batchId
+    };
+  }
+
+  // 2. Department-only (e.g. general departmental advisor without batch):
+  if (staffProfile.departmentId) {
+    return {
+      departmentId: staffProfile.departmentId
+    };
+  }
+
+  // 3. Explicit direct assignments (fallback if staff has no department/batch configured):
   const directAssignments = await prisma.staffStudentAssignment.findMany({
     where: { staffProfileId: staffProfile.id },
     select: { studentId: true }
   });
   const directStudentIds = directAssignments.map(a => a.studentId);
-
-  const orConditions = [];
   if (directStudentIds.length > 0) {
-    orConditions.push({ id: { in: directStudentIds } });
-  }
-  if (staffProfile.batchId) {
-    orConditions.push({ batchId: staffProfile.batchId });
-  } else if (staffProfile.departmentId) {
-    orConditions.push({ departmentId: staffProfile.departmentId });
+    return { id: { in: directStudentIds } };
   }
 
-  if (orConditions.length === 0) {
-    // If no direct or departmental assignments exist, restrict to none
-    return { id: '__NO_ASSIGNED_STUDENTS__' };
-  }
-
-  return { OR: orConditions };
+  // If no assignments exist, deny all access
+  return { id: '__NO_ASSIGNED_STUDENTS__' };
 }
 
 // GET /api/staff/overview
@@ -665,14 +672,28 @@ export async function getVerificationHistory(req, res, next) {
     const { decision, studentId, limit = 50 } = req.query;
     const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
 
+    const studentCondition = await getAuthorizedStudentCondition(staff);
+    const authorizedStudents = await prisma.studentProfile.findMany({
+      where: studentCondition,
+      select: { id: true }
+    });
+    const authorizedStudentIds = authorizedStudents.map(s => s.id);
+
     const where = {
-      reviewerStaffId: staff.id
+      reviewerStaffId: staff.id,
+      studentId: { in: authorizedStudentIds }
     };
 
     if (decision && decision !== 'all') {
       where.decision = decision;
     }
     if (studentId) {
+      if (!authorizedStudentIds.includes(studentId)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied: You are not authorized to view verification history for this student.'
+        });
+      }
       where.studentId = studentId;
     }
 

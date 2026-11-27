@@ -158,7 +158,11 @@ export function AdminStaff() {
     setAssignStaffItem(staff);
     setAssignMessage('');
     try {
-      const res = await api.get('/admin/students', { params: { limit: 100 } });
+      const params = { limit: 100 };
+      if (staff.departmentId) params.departmentId = staff.departmentId;
+      if (staff.batchId) params.batchId = staff.batchId;
+
+      const res = await api.get('/admin/students', { params });
       if (res.data.success) {
         setAllStudents(res.data.students);
         const existingIds = staff.assignedStudents?.map(a => a.studentId || a.student?.id) || [];
@@ -480,9 +484,9 @@ export function AdminStaff() {
                       disabled={!selectedDeptObj?.batches?.length}
                       className="w-full p-2.5 rounded-lg border border-[#DCE3EC] bg-[#F4F6F9] focus:outline-hidden focus:border-[#142B4A] focus:bg-white text-[#0F172A] transition-colors disabled:opacity-50"
                     >
-                      <option value="">All Batches in Dept</option>
+                      <option value="">{selectedDeptObj?.batches?.length ? 'Select Batch...' : 'No Batches in Dept'}</option>
                       {selectedDeptObj?.batches?.map((b) => (
-                        <option key={b.id} value={b.id}>{b.name}</option>
+                        <option key={b.id} value={b.id}>{b.name} (Graduation: {b.graduationYear})</option>
                       ))}
                     </select>
                   </div>
@@ -597,9 +601,9 @@ export function AdminStaff() {
                     disabled={!editDeptObj?.batches?.length}
                     className="w-full p-2.5 rounded-lg border border-[#DCE3EC] bg-[#F4F6F9] focus:outline-hidden focus:border-[#142B4A] focus:bg-white text-[#0F172A] transition-colors disabled:opacity-50"
                   >
-                    <option value="">All Batches</option>
+                    <option value="">{editDeptObj?.batches?.length ? 'Select Batch...' : 'No Batches in Dept'}</option>
                     {editDeptObj?.batches?.map((b) => (
-                      <option key={b.id} value={b.id}>{b.name}</option>
+                      <option key={b.id} value={b.id}>{b.name} (Graduation: {b.graduationYear})</option>
                     ))}
                   </select>
                 </div>
