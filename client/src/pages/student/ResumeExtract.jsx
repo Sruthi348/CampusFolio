@@ -365,17 +365,6 @@ export function ResumeExtract() {
               </div>
             </div>
 
-            {/* Privacy notice banner */}
-            <div className="p-4 rounded-xl bg-[#F4F6F9] border border-[#DCE3EC] flex items-start gap-3">
-              <Info className="w-4 h-4 text-[#142B4A] shrink-0 mt-0.5" />
-              <div className="text-xs text-[#526175] space-y-1">
-                <p className="font-semibold text-[#0F172A]">Institutional Data Protection Guarantee</p>
-                <p>
-                  Your resume data is processed securely on the backend. Institutional identifiers (such as Roll Number, Department, Batch, and Student ID) are strictly protected and will never be overwritten.
-                </p>
-              </div>
-            </div>
-
             {/* Action Button */}
             <div className="flex justify-end">
               <button

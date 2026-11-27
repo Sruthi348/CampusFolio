@@ -127,7 +127,7 @@ export function Search() {
                 Institutional Directory
               </span>
               <h1 className="text-3xl sm:text-4xl font-bold text-[#0F172A] tracking-tight">
-                Student & Alumni Portfolios
+                Student Portfolios
               </h1>
               <p className="text-sm sm:text-base text-[#526175] mt-1">
                 Discover verified students across departments, technology stacks, and graduating cohorts.

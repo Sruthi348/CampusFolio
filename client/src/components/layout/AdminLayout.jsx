@@ -27,24 +27,6 @@ export function AdminLayout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pendingCount, setPendingCount] = useState(0);
-
-  const fetchModerationCount = async () => {
-    try {
-      const res = await api.get('/admin/moderation');
-      if (res.data.success) {
-        setPendingCount(res.data.totalPending || 0);
-      }
-    } catch (err) {
-      console.error('Failed to fetch pending count:', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchModerationCount();
-    const interval = setInterval(fetchModerationCount, 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleLogout = () => {
     logout();
@@ -59,7 +41,6 @@ export function AdminLayout() {
     { name: 'Departments & Batches', to: '/admin/departments', icon: BookOpen },
     { name: 'Verification Logs', to: '/admin/verification-logs', icon: ClipboardList },
     { name: 'Credentials & Passwords', to: '/admin/credentials', icon: KeyRound },
-    { name: 'Moderation Queue', to: '/admin/moderation', icon: ShieldCheck, badge: pendingCount || undefined },
     { name: 'Institutional Reports', to: '/admin/reports', icon: BarChart3 },
     { name: 'Audit Logs', to: '/admin/audit-logs', icon: FileText },
     { name: 'System Settings', to: '/admin/settings', icon: Settings }

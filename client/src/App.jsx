@@ -48,7 +48,6 @@ import { AdminAddStudent } from './pages/admin/AdminAddStudent';
 import { AdminStaff } from './pages/admin/AdminStaff';
 import { AdminCredentials } from './pages/admin/AdminCredentials';
 import { AdminVerificationLogs } from './pages/admin/AdminVerificationLogs';
-import { AdminModeration } from './pages/admin/AdminModeration';
 import { AdminProjects } from './pages/admin/AdminProjects';
 import { AdminDepartments } from './pages/admin/AdminDepartments';
 import { AdminReports } from './pages/admin/AdminReports';
@@ -146,7 +145,6 @@ export function App() {
             <Route path="staff" element={<AdminStaff />} />
             <Route path="credentials" element={<AdminCredentials />} />
             <Route path="verification-logs" element={<AdminVerificationLogs />} />
-            <Route path="moderation" element={<AdminModeration />} />
             <Route path="projects" element={<AdminProjects />} />
             <Route path="departments" element={<AdminDepartments />} />
             <Route path="reports" element={<AdminReports />} />
